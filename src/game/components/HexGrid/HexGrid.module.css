@@ -1,0 +1,10 @@
+.hexGridContainer {
+  position: relative;
+  margin: 20px auto;
+  display: block; /* Ensures margin auto works */
+  background-color: var(--color-bg-hex-grid); /* Background for the grid area itself */
+  /* border: 1px solid var(--color-border); */ /* Optional border around the grid container */
+  border-radius: 5px; /* Soften edges of the grid container */
+  /* padding is handled by HexGrid.jsx logic to fit hexes,
+     but you can add visual padding if the background is visible */
+}

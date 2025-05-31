@@ -1,0 +1,31 @@
+{
+  "id": "scenario1",
+  "name": "First Encounter",
+  "map": {
+    "type": "fixed",
+    "hexes": [
+      {"id": "hex-0-0", "q": 0, "r": 0, "terrain": "clear"},
+      {"id": "hex-0-1", "q": 0, "r": 1, "terrain": "clear"},
+      {"id": "hex-1-0", "q": 1, "r": 0, "terrain": "clear"},
+      {"id": "hex-1--1", "q": 1, "r": -1, "terrain": "clear"},
+      {"id": "hex-0--1", "q": 0, "r": -1, "terrain": "clear"},
+      {"id": "hex--1-0", "q": -1, "r": 0, "terrain": "clear"},
+      {"id": "hex--1-1", "q": -1, "r": 1, "terrain": "clear"}
+    ]
+  },
+  "playerStart": {"q": 0, "r": 0},
+  "units": [
+    {
+      "id": "player-sherman-1",
+      "type": "sherman_m4",
+      "faction": "player",
+      "sprite": "sherman.png", 
+      "hp": 10,
+      "movement": 5,
+      "attack": 6,
+      "defense": 4,
+      "currentHex": {"q": 0, "r": 0} 
+    }
+  ],
+  "objective": "Destroy all enemies (none yet)"
+}

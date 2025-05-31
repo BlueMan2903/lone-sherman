@@ -1,0 +1,30 @@
+.App {
+  text-align: center;
+  /* background-color: var(--color-bg-container); /* Optional if App has its own background */
+  /* border-radius: 8px; */
+  /* padding: 20px; */
+  /* box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3); */
+}
+
+.App h1 {
+  color: var(--color-text-primary);
+  margin-bottom: 20px;
+  /* text-shadow: 1px 1px 2px var(--color-border); */ /* Optional text shadow */
+}
+
+.game-container {
+  background-color: var(--color-bg-container);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 20px;
+  margin-top: 20px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.game-container h2, .game-container p {
+  color: var(--color-text-secondary); /* Use secondary for less prominent text */
+}
+
+.game-container h2 {
+    color: var(--color-text-primary); /* Or primary if you want it to stand out more */
+}

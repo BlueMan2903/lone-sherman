@@ -1,0 +1,57 @@
+.hex {
+  position: absolute;
+  /* Make sure your clip-path is correct for your chosen hex orientation */
+  clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%); /* Flat-top */
+  /* clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%); */ /* Pointy-top */
+  background-color: var(--color-hex-base);
+  box-sizing: border-box;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  font-size: 0.8em;
+  color: var(--color-text-on-hex);
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.1s ease; /* Added transform for subtle click */
+  /* Remove box-shadow from here if hexes should be seamless */
+  /* box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3); */
+}
+
+.hex:hover {
+  background-color: var(--color-hex-hover);
+  /* z-index: 1; /* Optional: bring to front on hover */
+}
+
+/* Example for selected state - you'll manage this class via React state */
+.hex.selected {
+  background-color: var(--color-hex-selected);
+  /* border: 2px solid var(--color-accent-primary); /* Optional border for selection */
+  /* box-shadow: 0 0 10px var(--color-accent-primary); */
+}
+
+/* Example for path highlight */
+.hex.pathHighlight {
+    background-color: var(--color-hex-path);
+}
+
+/* Example for attack highlight */
+.hex.attackHighlight {
+    background-color: var(--color-hex-attack);
+}
+
+
+.hexInner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.hexCoords, .hexTerrain {
+  pointer-events: none;
+  font-size: 0.9em; /* Slightly larger for readability */
+  /* text-shadow: 1px 1px 1px var(--color-bg-hex-grid); /* Shadow for better contrast */
+}

@@ -1,0 +1,63 @@
+:root {
+  /* Backgrounds */
+  --color-bg-main: #2E2D29; /* Dark Charcoal/Olive */
+  --color-bg-container: #383833; /* Muted Dark Grey-Green */
+  --color-bg-hex-grid: #33332E;  /* Slightly darker for grid area */
+
+  /* Hexagons */
+  --color-hex-base: #5D5D4C; /* Muted Olive/Khaki */
+  --color-hex-hover: #6F6F5E; /* Lighter Muted Olive/Khaki */
+  --color-hex-selected: #8F8F76; /* Desaturated Yellow-Green for selection */
+  --color-hex-path: #7A9A7A; /* Muted green for path/movement highlight */
+  --color-hex-attack: #A97A7A; /* Muted red for attack highlight */
+
+  /* Text & UI Elements */
+  --color-text-primary: #E0E0D6; /* Light Khaki/Beige */
+  --color-text-secondary: #A0A094; /* Muted Grey/Darker Khaki */
+  --color-text-on-hex: #D8D8CC; /* For text directly on hexes */
+  --color-text-accent: #B08D57; /* For important text, matches accent */
+
+  /* Accents & Borders */
+  --color-accent-primary: #B08D57; /* Desaturated Brass/Gold */
+  --color-accent-secondary: #C7753D; /* Muted Rust/Orange (optional second accent) */
+  --color-border: #2A2A24; /* Darkest Grey/Olive for borders */
+}
+
+body {
+  margin: 0;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* Example font */
+  background-color: var(--color-bg-main);
+  color: var(--color-text-primary);
+  display: flex;
+  justify-content: center;
+  /* align-items: center; /* Remove this if you want content to start at top */
+  min-height: 100vh;
+  padding-top: 20px; /* Add some padding at the top */
+  box-sizing: border-box;
+}
+
+#root {
+  width: 100%;
+  max-width: 1200px;
+  box-sizing: border-box;
+  padding: 0 20px; /* Horizontal padding for the root container */
+}
+
+h1, h2, h3, p {
+  margin-bottom: 0.5em; /* Consistent spacing */
+}
+
+button {
+  background-color: var(--color-accent-primary);
+  color: var(--color-bg-main); /* Dark text on light accent */
+  border: 1px solid var(--color-border);
+  padding: 8px 15px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background-color 0.2s ease;
+}
+
+button:hover {
+  background-color: #c89f68; /* Slightly lighter version of accent */
+}

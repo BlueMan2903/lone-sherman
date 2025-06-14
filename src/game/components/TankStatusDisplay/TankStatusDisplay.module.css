@@ -1,0 +1,117 @@
+.tankStatusContainer {
+  background-color: #2a2a2a; /* Dark background for the panel */
+  border: 1px solid #444; /* Subtle border */
+  border-radius: 8px; /* Rounded corners */
+  padding: 20px;
+  color: #e0e0e0; /* Light text color */
+  font-family: 'Arial', sans-serif;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+  margin-bottom: 20px; /* Space below the component if not in flex layout */
+  min-width: 250px; /* Ensure it has a minimum width */
+  max-width: 350px; /* Ensure it has a maximum width */
+  box-sizing: border-box; /* Include padding and border in the element's total width and height */
+}
+
+.tankStatusContainer h3 {
+  color: #a0d468; /* Greenish title */
+  margin-top: 0;
+  margin-bottom: 15px;
+  font-size: 1.4em;
+  text-align: center;
+}
+
+.crewStatus,
+.gunStatus,
+.additionalStats {
+  margin-bottom: 15px;
+  background-color: #333;
+  padding: 10px 15px;
+  border-radius: 5px;
+  border: 1px solid #4a4a4a;
+}
+
+.crewStatus h4,
+.gunStatus h4,
+.additionalStats h4 {
+  color: #8cc63f; /* Lighter green for sub-headings */
+  margin-top: 0;
+  margin-bottom: 10px;
+  font-size: 1.1em;
+}
+
+.crewStatus p,
+.gunStatus p,
+.additionalStats p {
+  margin: 5px 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.crewStatus strong,
+.gunStatus strong,
+.additionalStats strong {
+  color: #b0b0b0;
+}
+
+/* Specific crew status styling */
+.buttonedup {
+  color: #f7d002; /* Yellow for buttoned up */
+  font-weight: bold;
+}
+
+.alive {
+  color: #5cb85c; /* Green for alive */
+}
+
+.dead {
+  color: #d9534f; /* Red for dead */
+  font-weight: bold;
+}
+
+/* Main gun status styling */
+.loaded {
+  color: #5cb85c;
+  font-weight: bold;
+}
+
+.unloaded {
+  color: #f0ad4e; /* Orange for unloaded */
+}
+
+/* NEW: Styles for additional stats */
+.additionalStats {
+  margin-top: 15px;
+  padding-top: 10px;
+  border-top: 1px solid #444; /* Separator line */
+}
+
+.additionalStats h4 {
+  color: #c9c9c9;
+  margin-bottom: 8px;
+}
+
+/* Basic styling for "yes" and "no" states */
+.yes {
+  color: #d9534f; /* Red for damaged/immobilized "yes" */
+  font-weight: bold;
+}
+
+.no {
+  color: #5cb85c; /* Green for undamaged/mobile "no" */
+}
+
+/* Generic style for fire level */
+.fireLevel {
+  font-weight: bold;
+}
+
+/* Optional: Specific styles for fire levels if you want visual cues */
+.fireLevel-0 { color: #5cb85c; } /* Green */
+.fireLevel-1 { color: #8bc34a; }
+.fireLevel-2 { color: #ffeb3b; } /* Yellow */
+.fireLevel-3 { color: #ffc107; } /* Amber */
+.fireLevel-4 { color: #ff9800; } /* Orange */
+.fireLevel-5 { color: #ff5722; } /* Deep Orange */
+.fireLevel-6 { color: #f44336; } /* Red */
+.fireLevel-7 { color: #b71c1c; } /* Dark Red */

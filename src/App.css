@@ -1,30 +1,45 @@
-.App {
-  text-align: center;
-  /* background-color: var(--color-bg-container); /* Optional if App has its own background */
-  /* border-radius: 8px; */
-  /* padding: 20px; */
-  /* box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3); */
-}
+/* src/App.css */
 
-.App h1 {
-  color: var(--color-text-primary);
-  margin-bottom: 20px;
-  /* text-shadow: 1px 1px 2px var(--color-border); */ /* Optional text shadow */
-}
+/* ... (your existing App.css content) ... */
 
 .game-container {
-  background-color: var(--color-bg-container);
-  border: 1px solid var(--color-border);
-  border-radius: 8px;
-  padding: 20px;
-  margin-top: 20px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  /* You might want to adjust this if you have existing styles affecting layout */
+  display: flex;
+  flex-direction: column; /* Stacks title/objective above the main content */
+  align-items: center; /* Centers content horizontally */
+  padding: 20px; /* Add some padding around the game */
 }
 
-.game-container h2, .game-container p {
-  color: var(--color-text-secondary); /* Use secondary for less prominent text */
+.game-content-layout {
+  display: flex; /* Enables Flexbox */
+  flex-wrap: wrap; /* Allows items to wrap onto the next line if the screen is too narrow */
+  justify-content: center; /* Centers the content when there's extra space */
+  align-items: flex-start; /* Aligns items to the top (useful if one is taller than the other) */
+  gap: 30px; /* Adds space between the map and the status display */
+  width: 100%; /* Ensure it takes full width of its parent */
+  max-width: 1200px; /* Optional: limit overall width for larger screens */
 }
 
-.game-container h2 {
-    color: var(--color-text-primary); /* Or primary if you want it to stand out more */
+/* Optional: Basic styling for the children to control their behavior */
+.hex-grid-container { /* Assuming HexGrid's outermost div has this class (from HexGrid.module.css) */
+  flex-shrink: 0; /* Prevents the grid from shrinking if space is tight */
+  /* You might add background, border here if you want it to stand out */
 }
+
+.tank-status-container { /* Assuming TankStatusDisplay's outermost div has this class (from TankStatusDisplay.module.css) */
+  flex-shrink: 0; /* Prevents the status display from shrinking */
+  min-width: 280px; /* Give it a minimum width */
+  max-width: 350px; /* Give it a maximum width */
+  background-color: #333; /* Example background */
+  border: 1px solid #555; /* Example border */
+  padding: 15px; /* Example padding */
+  border-radius: 8px; /* Example rounded corners */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Example shadow */
+  color: #eee; /* Text color */
+}
+
+/* You may need to inspect your HexGrid.module.css and TankStatusDisplay.module.css
+   to confirm the exact class names of their root divs if they are different.
+   For example, if TankStatusDisplay's root div was just 'container', then
+   you'd use '.container' in App.css if you don't use CSS modules for App.css.
+*/

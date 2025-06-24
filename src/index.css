@@ -1,3 +1,5 @@
+/* src/index.css */
+
 :root {
   /* Backgrounds */
   --color-bg-main: #2E2D29; /* Dark Charcoal/Olive */
@@ -24,32 +26,41 @@
 }
 
 body {
-  margin: 0;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* Example font */
-  background-color: var(--color-bg-main);
-  color: var(--color-text-primary);
-  display: flex;
-  justify-content: center;
-  /* align-items: center; /* Remove this if you want content to start at top */
-  min-height: 100vh;
-  padding-top: 20px; /* Add some padding at the top */
-  box-sizing: border-box;
+  margin: 0; /* Keep margin: 0 */
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* Keep your font */
+  background-color: var(--color-bg-main); /* Keep background color */
+  color: var(--color-text-primary); /* Keep text color */
+
+  /* --- REMOVE OR COMMENT OUT THESE LINES --- */
+  /* display: flex; */
+  /* justify-content: center; */
+  /* align-items: center; */
+  /* padding-top: 20px; */
+  /* --- END REMOVE --- */
+
+  min-height: 100vh; /* Keep min-height to ensure body is at least full viewport height */
+  box-sizing: border-box; /* Keep box-sizing for consistency */
+  overflow: hidden; /* Add overflow: hidden here to prevent body scrollbars if internal content overflows */
 }
 
 #root {
-  width: 100%;
-  max-width: 1200px;
-  box-sizing: border-box;
-  padding: 0 20px; /* Horizontal padding for the root container */
+  width: 100%; /* Keep width: 100% */
+  height: 100vh; /* Make #root take full viewport height */
+  /* --- REMOVE THESE LINES --- */
+  /* max-width: 1200px; */
+  /* padding: 0 20px; */
+  /* --- END REMOVE --- */
+  box-sizing: border-box; /* Keep box-sizing */
 }
 
+/* Keep these general styles as they don't interfere with layout */
 h1, h2, h3, p {
-  margin-bottom: 0.5em; /* Consistent spacing */
+  margin-bottom: 0.5em;
 }
 
 button {
   background-color: var(--color-accent-primary);
-  color: var(--color-bg-main); /* Dark text on light accent */
+  color: var(--color-bg-main);
   border: 1px solid var(--color-border);
   padding: 8px 15px;
   border-radius: 4px;
@@ -59,5 +70,5 @@ button {
 }
 
 button:hover {
-  background-color: #c89f68; /* Slightly lighter version of accent */
+  background-color: #c89f68;
 }

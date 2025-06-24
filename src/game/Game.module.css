@@ -1,0 +1,42 @@
+/* src/game/Game.module.css */
+
+.gameContainer {
+  display: flex;
+  width: 100vw;
+  height: 100vh; /* This should now correctly apply to the full viewport */
+  background-color: var(--color-bg-primary, #1e1e1e);
+  /* No 'overflow: hidden' here, let children manage */
+}
+
+.mapArea {
+  flex: 3; /* e.g., 75% width */
+  padding: 20px;
+  text-align: center;
+  min-width: 0;
+  min-height: 0;
+  overflow: auto; /* Internal scrolling for map */
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  height: 100%; /* Fill available height for vertical scrolling */
+}
+
+/* ... (other styles like h2, p within mapArea) ... */
+
+.sidebar {
+  flex: 1; /* e.g., 25% width */
+  min-width: 280px;
+  max-width: 400px;
+  background-color: var(--color-bg-sidebar, #2a2a2a);
+  height: 100%; /* Fill available height for vertical scrolling */
+  padding: 20px;
+  box-shadow: -4px 0 10px rgba(0, 0, 0, 0.4);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  overflow-y: auto; /* Internal scrolling for sidebar */
+  box-sizing: border-box;
+  min-height: 0;
+}

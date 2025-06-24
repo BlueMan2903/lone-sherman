@@ -1,11 +1,12 @@
+// src/App.jsx
 import React from 'react';
-import './App.css'; // Keep or remove, depending on if you have global app styles
+import './App.css'; // Keep if you have other global App styles, otherwise remove
 import Game from './game/Game'; // Import the Game component
 
 function App() {
   return (
     <div className="App">
-      <h1>Lone Sherman: The Board Game</h1>
+      {/* Removed the h1 here to give Game full control over layout */}
       <Game /> {/* Render the main Game component here */}
     </div>
   );

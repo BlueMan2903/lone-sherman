@@ -1,0 +1,61 @@
+/* src/game/components/TurnActions/TurnActions.module.css */
+
+.actionButtonsContainer {
+  display: flex;
+  flex-direction: column; /* Stacks the buttons vertically */
+  gap: 10px; /* Provides space between the buttons */
+  margin-top: 20px; /* Adds space above the buttons section */
+  /* Ensures the container itself can be styled if needed */
+  padding: 10px; /* Some internal padding */
+  border-top: 1px solid var(--color-border-light); /* Separator from status display */
+  background-color: var(--color-bg-card); /* Consistent with status display inner sections */
+  border-radius: 5px; /* Consistent with status display inner sections */
+}
+
+.actionButtonsContainer button {
+  padding: 12px 20px; /* Slightly larger padding for better touch targets */
+  font-size: 1.1em; /* Slightly larger font */
+  font-weight: bold;
+  border: none;
+  border-radius: 8px; /* More rounded corners for buttons */
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.1s ease, box-shadow 0.2s ease;
+  color: white; /* Default text color for the buttons */
+  flex-grow: 1; /* Allows buttons to grow and fill available width */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2); /* Add a subtle shadow */
+}
+
+.actionButtonsContainer button:hover {
+  transform: translateY(-2px); /* More pronounced lift effect on hover */
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3); /* Darker shadow on hover */
+}
+
+.actionButtonsContainer button:active {
+  transform: translateY(0); /* Press effect */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Specific button colors (using hardcoded colors as fallbacks, you can replace with vars) */
+.startButton {
+  background-color: #007bff; /* Blue */
+}
+
+.startButton:hover {
+  background-color: #0056b3; /* Darker blue */
+}
+
+.maneuverButton {
+  background-color: #28a745; /* Green */
+}
+
+.maneuverButton:hover {
+  background-color: #218838; /* Darker green */
+}
+
+.attackButton {
+  background-color: #dc3545; /* Red */
+}
+
+.attackButton:hover {
+  background-color: #c82333; /* Darker red */
+}

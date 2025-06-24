@@ -1,45 +1,47 @@
 /* src/App.css */
 
-/* ... (your existing App.css content) ... */
+/* Keep your global CSS variables */
+:root {
+  /* Backgrounds */
+  --color-bg-main: #2E2D29; /* Dark Charcoal/Olive */
+  --color-bg-container: #383833; /* Muted Dark Grey-Green */
+  --color-bg-hex-grid: #33332E;  /* Slightly darker for grid area */
 
-.game-container {
-  /* You might want to adjust this if you have existing styles affecting layout */
-  display: flex;
-  flex-direction: column; /* Stacks title/objective above the main content */
-  align-items: center; /* Centers content horizontally */
-  padding: 20px; /* Add some padding around the game */
+  /* Hexagons */
+  --color-hex-base: #5D5D4C; /* Muted Olive/Khaki */
+  --color-hex-hover: #6F6F5E; /* Lighter Muted Olive/Khaki */
+  --color-hex-selected: #8F8F76; /* Desaturated Yellow-Green for selection */
+  --color-hex-path: #7A9A7A; /* Muted green for path/movement highlight */
+  --color-hex-attack: #A97A7A; /* Muted red for attack highlight */
+
+  /* Text & UI Elements */
+  --color-text-primary: #E0E0D6; /* Light Khaki/Beige */
+  --color-text-secondary: #A0A094; /* Muted Grey/Darker Khaki */
+  --color-text-on-hex: #D8D8CC; /* For text directly on hexes */
+  --color-text-accent: #B08D57; /* For important text, matches accent */
+
+  /* Accents & Borders */
+  --color-accent-primary: #B08D57; /* Desaturated Brass/Gold */
+  --color-accent-secondary: #C7753D; /* Muted Rust/Orange (optional second accent) */
+  --color-border: #2A2A24; /* Darkest Grey/Olive for borders */
 }
 
-.game-content-layout {
-  display: flex; /* Enables Flexbox */
-  flex-wrap: wrap; /* Allows items to wrap onto the next line if the screen is too narrow */
-  justify-content: center; /* Centers the content when there's extra space */
-  align-items: flex-start; /* Aligns items to the top (useful if one is taller than the other) */
-  gap: 30px; /* Adds space between the map and the status display */
-  width: 100%; /* Ensure it takes full width of its parent */
-  max-width: 1200px; /* Optional: limit overall width for larger screens */
+/* Keep your general element styling */
+h1, h2, h3, p {
+  margin-bottom: 0.5em; /* Consistent spacing */
 }
 
-/* Optional: Basic styling for the children to control their behavior */
-.hex-grid-container { /* Assuming HexGrid's outermost div has this class (from HexGrid.module.css) */
-  flex-shrink: 0; /* Prevents the grid from shrinking if space is tight */
-  /* You might add background, border here if you want it to stand out */
+button {
+  background-color: var(--color-accent-primary);
+  color: var(--color-bg-main); /* Dark text on light accent */
+  border: 1px solid var(--color-border);
+  padding: 8px 15px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background-color 0.2s ease;
 }
 
-.tank-status-container { /* Assuming TankStatusDisplay's outermost div has this class (from TankStatusDisplay.module.css) */
-  flex-shrink: 0; /* Prevents the status display from shrinking */
-  min-width: 280px; /* Give it a minimum width */
-  max-width: 350px; /* Give it a maximum width */
-  background-color: #333; /* Example background */
-  border: 1px solid #555; /* Example border */
-  padding: 15px; /* Example padding */
-  border-radius: 8px; /* Example rounded corners */
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Example shadow */
-  color: #eee; /* Text color */
+button:hover {
+  background-color: #c89f68; /* Slightly lighter version of accent */
 }
-
-/* You may need to inspect your HexGrid.module.css and TankStatusDisplay.module.css
-   to confirm the exact class names of their root divs if they are different.
-   For example, if TankStatusDisplay's root div was just 'container', then
-   you'd use '.container' in App.css if you don't use CSS modules for App.css.
-*/

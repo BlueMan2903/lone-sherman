@@ -1,12 +1,6 @@
-/* src/game/components/HexGrid/HexGrid.module.css */
-
 .hexGridContainer {
   position: relative;
-  /* Ensure margin is REMOVED from here */
-  /* margin: 20px auto; */
-  /* display: block; */ /* Can be removed, its style prop handles dimensions */
+  display: block;
   background-color: var(--color-bg-hex-grid);
   border-radius: 5px;
-  outline: 2px solid red; /* Keep this for now to see the computed size */
-  /* Ensure NO 'overflow: hidden' or 'overflow: auto' here */
 }

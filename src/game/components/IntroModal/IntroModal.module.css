@@ -1,0 +1,77 @@
+/* src/components/IntroModal/IntroModal.module.css */
+
+.modalOverlay {
+  position: fixed; /* Fixes it to the viewport */
+  top: 0;
+  left: 0;
+  width: 100vw; /* Full viewport width */
+  height: 100vh; /* Full viewport height */
+  background-color: rgba(0, 0, 0, 0.85); /* Semi-transparent dark background */
+  display: flex; /* Use flexbox to center content */
+  justify-content: center; /* Center horizontally */
+  align-items: center; /* Center vertically */
+  z-index: 1000; /* Ensure it's on top of everything else */
+  backdrop-filter: blur(5px); /* Optional: Adds a subtle blur to content behind */
+  animation: fadeIn 0.5s ease-out; /* Smooth fade-in */
+}
+
+.modalContent {
+  background-color: var(--color-bg-container, #383833); /* Use a defined background color */
+  border: 1px solid var(--color-border, #444);
+  border-radius: 12px; /* Nicely rounded corners */
+  padding: 40px;
+  max-width: 600px; /* Limit content width for readability */
+  color: var(--color-text-primary, #e0e0d6);
+  text-align: center;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5); /* Stronger shadow for depth */
+  animation: slideIn 0.5s ease-out; /* Smooth slide-in effect */
+}
+
+.modalContent h2 {
+  color: var(--color-heading, #a0d468); /* Use a consistent heading color */
+  margin-top: 0;
+  margin-bottom: 20px;
+  font-size: 1.8em;
+}
+
+.modalContent p {
+  font-size: 1.1em;
+  line-height: 1.6;
+  margin-bottom: 30px;
+}
+
+.goButton {
+  padding: 15px 30px; /* Larger padding for a more prominent button */
+  font-size: 1.2em; /* Larger font */
+  background-color: var(--color-accent-primary, #B08D57); /* Use your primary accent color */
+  color: var(--color-bg-main, #2E2D29); /* Dark text on accent */
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.1s ease, box-shadow 0.2s ease;
+  font-weight: bold;
+  letter-spacing: 0.5px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+}
+
+.goButton:hover {
+  background-color: color-mix(in srgb, var(--color-accent-primary, #B08D57) 90%, black); /* Slightly darker on hover */
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+}
+
+.goButton:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideIn {
+  from { transform: translateY(-50px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}

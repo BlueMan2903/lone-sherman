@@ -7,12 +7,11 @@ import { HEX_WIDTH, HEX_HEIGHT } from '../../logic/hexUtils';
 const terrainTextures = import.meta.glob('/src/assets/images/terrain/*.{png,jpg,jpeg,gif,webp}', { eager: true });
 
 function Hex({ hexData, pixelX, pixelY }) {
-  // Destructure 'rotation' from hexData (it will be undefined if not set in JSON)
-  const { id, q, r, terrain, rotation } = hexData;
+  // Destructure 'rotation', and NEW 'shermanSmoke' and 'germanSmoke' from hexData
+  const { id, q, r, terrain, rotation, shermanSmoke, germanSmoke } = hexData; // <-- UPDATED LINE
 
   // Construct the expected path key for the specific terrain texture
-  // Assuming .png, adjust extension if your files are different (e.g., .jpg)
-  const textureKey = `/src/assets/images/terrain/${terrain}.png`; 
+  const textureKey = `/src/assets/images/terrain/${terrain}.png`;
   const textureSrc = terrainTextures[textureKey]?.default;
 
   const style = {
@@ -33,7 +32,7 @@ function Hex({ hexData, pixelX, pixelY }) {
   if (rotation !== undefined && rotation !== null) {
     hexInnerStyle.transform = `rotate(${rotation}deg)`;
     // Ensure the rotation origin is the center of the hexInner div
-    hexInnerStyle.transformOrigin = 'center center'; 
+    hexInnerStyle.transformOrigin = 'center center';
   }
 
   return (
@@ -48,7 +47,7 @@ function Hex({ hexData, pixelX, pixelY }) {
         <span className={styles.hexCoords}>
           ({q}, {r})
         </span>
-        {/* Removed: The text display for terrain is now replaced by the background image */}
+        {(shermanSmoke || germanSmoke) && <div className={styles.smokeOverlay}></div>} {/* <-- UPDATED LINE */}
       </div>
     </div>
   );

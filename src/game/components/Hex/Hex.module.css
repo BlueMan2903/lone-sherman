@@ -1,3 +1,5 @@
+/* src/game/components/Hex/Hex.module.css */
+
 .hex {
   position: absolute;
   /* Make sure your clip-path is correct for your chosen hex orientation */
@@ -39,7 +41,6 @@
     background-color: var(--color-hex-attack);
 }
 
-
 .hexInner {
   position: relative;
   width: 100%;
@@ -54,4 +55,18 @@
   pointer-events: none;
   font-size: 0.9em; /* Slightly larger for readability */
   /* text-shadow: 1px 1px 1px var(--color-bg-hex-grid); /* Shadow for better contrast */
+}
+
+/* NEW: Styles for the smoke overlay */
+.smokeOverlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(179, 179, 179, 0.767); /* Semi-transparent dark grey */
+  clip-path: inherit; /* Inherit the hex shape from the parent */
+  border-radius: inherit; /* Inherit border-radius for consistency */
+  pointer-events: none; /* Allows clicks to pass through to the hex below */
+  z-index: 15; /* Ensure it's above the hex base but below units */
 }

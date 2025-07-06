@@ -59,3 +59,20 @@
 .attackButton:hover {
   background-color: #c82333; /* Darker red */
 }
+
+
+.phaseInstruction { /* NEW STYLE */
+  color: var(--color-text-primary);
+  font-size: 1.1em;
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+.commanderButton { /* NEW STYLE - you can customize colors */
+  background-color: var(--color-accent-secondary, #68A0D4); /* Example color */
+  color: var(--color-bg-main);
+}
+
+.commanderButton:hover {
+  background-color: color-mix(in srgb, var(--color-accent-secondary, #68A0D4) 90%, black);
+}

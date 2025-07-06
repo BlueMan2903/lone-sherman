@@ -1,5 +1,5 @@
 // src/game/Game.jsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import HexGrid from './components/HexGrid/HexGrid';
 import TankStatusDisplay from './components/TankStatusDisplay/TankStatusDisplay';
 import TurnActions from './components/TurnActions/TurnActions';
@@ -19,14 +19,12 @@ const selectRandomUniqueElements = (arr, count) => {
 function Game() {
   const [currentScenario, setCurrentScenario] = useState(null);
   const [activeUnit, setActiveUnit] = useState(null);
+  const [turnNumber, setTurnNumber] = useState(1);
 
-  useEffect(() => {
-    // Create a deep mutable copy of the scenario data to work with
+  const initializeScenarioUnits = useCallback(() => {
     const scenario = JSON.parse(JSON.stringify(scenario1Data));
+    let allUnits = [...(scenario.units || [])];
 
-    let allUnits = [...(scenario.units || [])]; // Start with fixed units
-
-    // Process dynamic spawns
     if (scenario.dynamicSpawns && scenario.unitTemplates) {
       scenario.dynamicSpawns.forEach(spawnInstruction => {
         const template = scenario.unitTemplates.find(t => t.id === spawnInstruction.templateId);
@@ -37,9 +35,9 @@ function Game() {
           randomSpawnHexes.forEach((hex, index) => {
             const newUnit = {
               ...template,
-              id: `${template.id}-${Math.random().toString(36).substr(2, 9)}`, // Unique ID for each spawned unit
-              currentHex: { q: hex.q, r: hex.r }, // Store only q, r for currentHex
-              rotation: hex.rotation || 0 // NEW: Assign rotation from the hex, default to 0 if not provided
+              id: `${template.id}-${Math.random().toString(36).substr(2, 9)}`,
+              currentHex: { q: hex.q, r: hex.r },
+              rotation: hex.rotation || 0
             };
             allUnits.push(newUnit);
           });
@@ -48,24 +46,66 @@ function Game() {
         }
       });
     }
-
-    // Update the scenario's units with all (fixed + dynamically spawned) units
     scenario.units = allUnits;
+    return scenario;
+  }, []);
 
-    setCurrentScenario(scenario);
+  useEffect(() => {
+    const initialScenario = initializeScenarioUnits();
+    setCurrentScenario(initialScenario);
 
-    // Set the Sherman as the active unit (assuming it's unit-sherman-1)
-    const shermanUnit = scenario.units.find(unit => unit.id === "unit-sherman-1");
+    const shermanUnit = initialScenario.units.find(unit => unit.id === "unit-sherman-1");
     if (shermanUnit) {
       setActiveUnit(shermanUnit);
-    } else if (scenario.units && scenario.units.length > 0) {
-      // Fallback: if Sherman not found, set the first available unit as active
-      setActiveUnit(scenario.units[0]);
+    } else if (initialScenario.units && initialScenario.units.length > 0) {
+      setActiveUnit(initialScenario.units[0]);
     }
+  }, [initializeScenarioUnits]);
 
-  }, []); // Empty dependency array ensures this runs once on mount
+  const handleStartTurnLogic = useCallback(() => {
+    console.log(`Starting Turn ${turnNumber}...`);
 
-  // Placeholder action handlers
+    // Step 1: Remove all Sherman smoke
+    setCurrentScenario(prevScenario => {
+      if (!prevScenario) return null;
+
+      const newScenario = JSON.parse(JSON.stringify(prevScenario));
+      newScenario.map.hexes = newScenario.map.hexes.map(hex => ({
+        ...hex,
+        shermanSmoke: false
+      }));
+      console.log("All Sherman smoke removed.");
+      return newScenario;
+    });
+
+    // We no longer increment turn number here. The turn number will increment
+    // at the *end* of the full turn sequence.
+    // The UI will now show "Position the commander!"
+  }, [turnNumber]);
+
+  // NEW: handleCommanderDecision function
+  const handleCommanderDecision = useCallback((position) => {
+    console.log(`Commander positioned: ${position}`);
+    setCurrentScenario(prevScenario => {
+      if (!prevScenario) return null;
+
+      const newScenario = JSON.parse(JSON.stringify(prevScenario));
+      const shermanIndex = newScenario.units.findIndex(unit => unit.id === "unit-sherman-1");
+
+      if (shermanIndex !== -1) {
+        newScenario.units[shermanIndex].crew.commander = position;
+        // Also update activeUnit if it's the Sherman
+        setActiveUnit(newScenario.units[shermanIndex]);
+        console.log(`Sherman commander status updated to: ${position}`);
+      } else {
+        console.warn("Sherman unit not found to update commander status.");
+      }
+      return newScenario;
+    });
+    // TODO: Proceed to Sherman Operations Phase (UI in TurnActions handles this transition)
+  }, []);
+
+
   const handleManeuver = () => {
     console.log("Maneuver action initiated from Game component!");
   };
@@ -83,6 +123,7 @@ function Game() {
       <div className={styles.mapArea}>
         <h2>Scenario: {currentScenario.name}</h2>
         <p>Objective: {currentScenario.objective}</p>
+        <p>Turn: {turnNumber}</p>
         <div style={{
             position: 'relative',
             width: '100%',
@@ -101,7 +142,12 @@ function Game() {
 
       <div className={styles.sidebar}>
         <TankStatusDisplay unit={activeUnit} />
-        <TurnActions onManeuver={handleManeuver} onAttack={handleAttack} />
+        <TurnActions
+          onManeuver={handleManeuver}
+          onAttack={handleAttack}
+          onStartTurnLogic={handleStartTurnLogic}
+          onCommanderDecision={handleCommanderDecision}
+        />
       </div>
     </div>
   );

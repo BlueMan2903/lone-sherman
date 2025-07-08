@@ -65,7 +65,6 @@ function Game() {
   const handleStartTurnLogic = useCallback(() => {
     console.log(`Starting Turn ${turnNumber}...`);
 
-    // Step 1: Remove all Sherman smoke
     setCurrentScenario(prevScenario => {
       if (!prevScenario) return null;
 
@@ -77,13 +76,8 @@ function Game() {
       console.log("All Sherman smoke removed.");
       return newScenario;
     });
-
-    // We no longer increment turn number here. The turn number will increment
-    // at the *end* of the full turn sequence.
-    // The UI will now show "Position the commander!"
   }, [turnNumber]);
 
-  // NEW: handleCommanderDecision function
   const handleCommanderDecision = useCallback((position) => {
     console.log(`Commander positioned: ${position}`);
     setCurrentScenario(prevScenario => {
@@ -94,7 +88,6 @@ function Game() {
 
       if (shermanIndex !== -1) {
         newScenario.units[shermanIndex].crew.commander = position;
-        // Also update activeUnit if it's the Sherman
         setActiveUnit(newScenario.units[shermanIndex]);
         console.log(`Sherman commander status updated to: ${position}`);
       } else {
@@ -102,7 +95,6 @@ function Game() {
       }
       return newScenario;
     });
-    // TODO: Proceed to Sherman Operations Phase (UI in TurnActions handles this transition)
   }, []);
 
 
@@ -120,15 +112,32 @@ function Game() {
 
   return (
     <div className={styles.gameContainer}>
+      {/* Left Section */}
+      <div className={styles.leftPanel}>
+        <div className={styles.infoContainer}>
+          <h3>Game Info</h3>
+          <div className={styles.infoCard}>
+            <h2>Scenario</h2>
+            <p>{currentScenario.name}</p>
+          </div>
+          <div className={styles.infoCard}>
+            <h2>Objective</h2>
+            <p>{currentScenario.objective}</p>
+          </div>
+          <div className={styles.infoCard}>
+            <h2>Turn</h2>
+            <p className={styles.turnCounter}>{turnNumber}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Middle Section: Map Area */}
       <div className={styles.mapArea}>
-        <h2>Scenario: {currentScenario.name}</h2>
-        <p>Objective: {currentScenario.objective}</p>
-        <p>Turn: {turnNumber}</p>
         <div style={{
             position: 'relative',
             width: '100%',
             height: '100%',
-            overflow: 'hidden',
+            overflow: 'auto',
             display: 'flex',
             justifyContent: 'center',
             alignItems: 'flex-start',
@@ -140,6 +149,7 @@ function Game() {
         </div>
       </div>
 
+      {/* Right Section: Sidebar */}
       <div className={styles.sidebar}>
         <TankStatusDisplay unit={activeUnit} />
         <TurnActions

@@ -3,40 +3,110 @@
 .gameContainer {
   display: flex;
   width: 100vw;
-  height: 100vh; /* This should now correctly apply to the full viewport */
-  background-color: var(--color-bg-primary, #1e1e1e);
-  /* No 'overflow: hidden' here, let children manage */
+  height: 100vh;
+  background-color: var(--color-bg-main);
 }
 
+.leftPanel {
+  flex: 1;
+  padding: 20px;
+  min-width: 200px;
+  background-color: var(--color-bg-container);
+  box-shadow: 4px 0 10px rgba(0, 0, 0, 0.4);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: flex-start;
+  height: 100%;
+  box-sizing: border-box;
+  overflow-y: auto;
+  gap: 20px; /* Space between each new infoCard */
+}
+
+.infoContainer {
+  background-color: #2a2a2a;
+  border: 1px solid #444;
+  border-radius: 8px;
+  padding: 20px;
+  color: #e0e0e0;
+  font-family: 'Arial', sans-serif;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.infoContainer h3 {
+  color: #a0d468;
+  margin-top: 0;
+  margin-bottom: 15px;
+  font-size: 1.4em;
+  text-align: center;
+}
+
+/* REMOVED: .scenarioInfoBox styles */
+
+/* NEW: General styles for info cards (like the internal sections of TankStatusDisplay) */
+.infoCard {
+  background-color: #333; /* Consistent with TankStatusDisplay's internal sections */
+  padding: 15px; /* Consistent padding */
+  border-radius: 5px; /* Rounded corners */
+  border: 1px solid #4a4a4a; /* Subtle border */
+  width: 100%; /* Occupy full width within its parent (.leftPanel) */
+  box-sizing: border-box; /* Include padding and border in width */
+  display: flex; /* Use flex for internal layout of card content */
+  flex-direction: column; /* Stack content vertically */
+  gap: 5px; /* Small gap between title and value within the card */
+  margin-bottom: 15px;
+}
+
+/* Adjust h2 and p within infoCard to remove default margins, letting gap manage spacing */
+.infoCard h2 {
+  font-size: 1.1em; /* Slightly adjust font size for card headers if needed */
+  margin: 0; /* Remove default margin */
+  color: #8cc63f; /* Make the labels slightly muted */
+  margin-bottom: 5px;
+}
+
+.infoCard p {
+  font-size: 1.1em; /* Adjust font size for card content if needed */
+  margin: 0; /* Remove default margin */
+  font-weight: bold; /* Make content bold */
+  color: var(--color-text-primary); /* Use primary text color for content */
+}
+
+
 .mapArea {
-  flex: 3; /* e.g., 75% width */
+  flex: 4;
   padding: 20px;
   text-align: center;
   min-width: 0;
   min-height: 0;
-  overflow: auto; /* Internal scrolling for map */
+  overflow: auto;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
-  height: 100%; /* Fill available height for vertical scrolling */
+  height: 100%;
 }
 
-/* ... (other styles like h2, p within mapArea) ... */
-
 .sidebar {
-  flex: 1; /* e.g., 25% width */
+  flex: 2;
   min-width: 280px;
   max-width: 400px;
-  background-color: var(--color-bg-sidebar, #2a2a2a);
-  height: 100%; /* Fill available height for vertical scrolling */
+  background-color: var(--color-bg-container);
+  height: 100%;
   padding: 20px;
   box-shadow: -4px 0 10px rgba(0, 0, 0, 0.4);
   display: flex;
   flex-direction: column;
   gap: 20px;
-  overflow-y: auto; /* Internal scrolling for sidebar */
   box-sizing: border-box;
-  min-height: 0;
+  overflow-y: auto;
+}
+
+/* Specific styling for turn counter (now in its own infoCard) */
+.turnCounter {
+  font-weight: bold;
+  color: var(--color-text-accent);
 }

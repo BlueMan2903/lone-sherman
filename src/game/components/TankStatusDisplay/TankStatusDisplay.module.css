@@ -56,7 +56,12 @@
 
 /* Specific crew status styling */
 .buttonedup {
-  color: #f7d002; /* Yellow for buttoned up */
+  color: #5cb85c; /* Green for alive */
+  font-weight: bold;
+}
+
+.poppedhatch {
+  color: #C7753D; /* Muted Rust/Orange */
   font-weight: bold;
 }
 

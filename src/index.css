@@ -1,5 +1,12 @@
 /* src/index.css */
 
+@font-face {
+  font-family: 'Death From Above';
+  src: url('/src/assets/fonts/DeathFromAbove-Ow9P.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
 :root {
   /* Backgrounds */
   --color-bg-main: #2E2D29; /* Dark Charcoal/Olive */

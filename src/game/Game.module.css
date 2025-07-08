@@ -90,6 +90,16 @@
   height: 100%;
 }
 
+.mapArea h1 {
+  font-family: 'Death From Above', sans-serif;
+  font-size: 4em; /* Larger font size */
+  color: var(--color-text-accent);
+  text-shadow: 2px 2px 4px var(--color-border);
+  margin-top: 5px;
+  margin-bottom: 10px; /* Space below the title */
+  text-align: center;
+}
+
 .sidebar {
   flex: 2;
   min-width: 280px;

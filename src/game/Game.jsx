@@ -18,7 +18,6 @@ const selectRandomUniqueElements = (arr, count) => {
 
 function Game() {
   const [currentScenario, setCurrentScenario] = useState(null);
-  const [activeUnit, setActiveUnit] = useState(null);
   const [turnNumber, setTurnNumber] = useState(1);
 
   const initializeScenarioUnits = useCallback(() => {
@@ -53,13 +52,6 @@ function Game() {
   useEffect(() => {
     const initialScenario = initializeScenarioUnits();
     setCurrentScenario(initialScenario);
-
-    const shermanUnit = initialScenario.units.find(unit => unit.id === "unit-sherman-1");
-    if (shermanUnit) {
-      setActiveUnit(shermanUnit);
-    } else if (initialScenario.units && initialScenario.units.length > 0) {
-      setActiveUnit(initialScenario.units[0]);
-    }
   }, [initializeScenarioUnits]);
 
   const handleStartTurnLogic = useCallback(() => {
@@ -84,11 +76,10 @@ function Game() {
       if (!prevScenario) return null;
 
       const newScenario = JSON.parse(JSON.stringify(prevScenario));
-      const shermanIndex = newScenario.units.findIndex(unit => unit.id === "unit-sherman-1");
+      const shermanIndex = newScenario.units.findIndex(unit => unit.id.includes("sherman"));
 
       if (shermanIndex !== -1) {
         newScenario.units[shermanIndex].crew.commander = position;
-        setActiveUnit(newScenario.units[shermanIndex]);
         console.log(`Sherman commander status updated to: ${position}`);
       } else {
         console.warn("Sherman unit not found to update commander status.");
@@ -110,6 +101,13 @@ function Game() {
     return <div>Loading game...</div>;
   }
 
+  // Calculate enemy tank count for the objective display
+  const enemyTanks = currentScenario.units.filter(unit => unit.faction === 'axis');
+  const totalEnemyTanks = enemyTanks.length;
+  const destroyedEnemyTanks = enemyTanks.filter(unit => unit.destroyed).length;
+  const objectiveText = `Destroy all enemies (${destroyedEnemyTanks}/${totalEnemyTanks})`;
+  const shermanUnit = currentScenario.units.find(unit => unit.id.includes("sherman"));
+
   return (
     <div className={styles.gameContainer}>
       {/* Left Section */}
@@ -122,7 +120,7 @@ function Game() {
           </div>
           <div className={styles.infoCard}>
             <h2>Objective</h2>
-            <p>{currentScenario.objective}</p>
+            <p>{objectiveText}</p>
           </div>
           <div className={styles.infoCard}>
             <h2>Turn</h2>
@@ -133,6 +131,7 @@ function Game() {
 
       {/* Middle Section: Map Area */}
       <div className={styles.mapArea}>
+        <h1>Lone Sherman</h1>
         <div style={{
             position: 'relative',
             width: '100%',
@@ -151,12 +150,14 @@ function Game() {
 
       {/* Right Section: Sidebar */}
       <div className={styles.sidebar}>
-        <TankStatusDisplay unit={activeUnit} />
+        <TankStatusDisplay unit={shermanUnit} />
         <TurnActions
           onManeuver={handleManeuver}
           onAttack={handleAttack}
           onStartTurnLogic={handleStartTurnLogic}
           onCommanderDecision={handleCommanderDecision}
+          shermanUnit={shermanUnit}
+          currentScenario={currentScenario}
         />
       </div>
     </div>

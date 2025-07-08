@@ -76,3 +76,12 @@
 .commanderButton:hover {
   background-color: color-mix(in srgb, var(--color-accent-secondary, #68A0D4) 90%, black);
 }
+
+.maneuverActionButton {
+  background-color: #007bff; /* Blue, matches startButton */
+  color: white;
+}
+
+.maneuverActionButton:hover {
+  background-color: #0056b3; /* Darker blue, matches startButton:hover */
+}

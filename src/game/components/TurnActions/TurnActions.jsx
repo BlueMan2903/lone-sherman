@@ -4,7 +4,7 @@ import styles from './TurnActions.module.css';
 import diceRollingSound from '../../../assets/sounds/dice-rolling.mp3';
 import DiceDisplay from '../DiceDisplay/DiceDisplay';
 
-function TurnActions({ onManeuver, onAttack, onStartTurnLogic, onCommanderDecision, shermanUnit, currentScenario }) {
+function TurnActions({ onManeuver, onAttack, onStartTurnLogic, onCommanderDecision, shermanUnit, currentScenario, onMoveSherman, onReverseSherman, onTurnSherman }) {
   // State to manage the current phase of the player's turn
   // 'initial' -> 'commander_decision' -> 'sherman_operations'
   const [currentPhase, setCurrentPhase] = useState('initial');
@@ -12,16 +12,7 @@ function TurnActions({ onManeuver, onAttack, onStartTurnLogic, onCommanderDecisi
   const [selectedManeuverAction, setSelectedManeuverAction] = useState(null);
   const [selectedDieIndex, setSelectedDieIndex] = useState(null);
 
-  const getDiceAction = (roll) => {
-    if (roll === 1) {
-      return "REVERSE";
-    } else if (roll >= 2 && roll <= 4) {
-      return "TURN";
-    } else if (roll >= 5 && roll <= 6) {
-      return "MOVE";
-    }
-    return "";
-  };
+  
 
   const calculateManeuverDice = () => {
     let dice = 0;
@@ -70,11 +61,10 @@ function TurnActions({ onManeuver, onAttack, onStartTurnLogic, onCommanderDecisi
     return { totalDice: dice, reasons };
   };
 
-  const handleDieClick = (roll, index) => {
-    console.log("handleDieClick called with roll:", roll, "and index:", index);
+  const handleDieClick = (roll, index, action) => {
+    console.log("handleDieClick called with roll:", roll, "index:", index, "and action:", action);
     setSelectedDieIndex(index);
     console.log("selectedDieIndex after update:", index);
-    const action = getDiceAction(roll);
     setSelectedManeuverAction(action);
   };
 
@@ -155,17 +145,28 @@ function TurnActions({ onManeuver, onAttack, onStartTurnLogic, onCommanderDecisi
             className={`${styles.actionButton} ${styles.maneuverButton}`}
             onClick={handleManeuverClick}
             title={`Roll ${calculateManeuverDice().totalDice} dice\n${calculateManeuverDice().reasons.join('\n')}`}
+            disabled={diceResults.length > 0}
           >
             Maneuver
           </button>
-          <DiceDisplay results={diceResults} onDieClick={handleDieClick} selectedIndex={selectedDieIndex} />
+          <DiceDisplay results={diceResults} onDieClick={(roll, index, action) => handleDieClick(roll, index, action)} selectedIndex={selectedDieIndex} />
           {(!diceResults || diceResults.length === 0) && (
             <button className={`${styles.actionButton} ${styles.attackButton}`} onClick={handleAttackClick}>
               Attack
             </button>
           )}
-          {selectedManeuverAction && (
-            <button className={`${styles.actionButton} ${styles.maneuverActionButton}`}>
+          {selectedManeuverAction === "MOVE" && (
+            <button className={`${styles.actionButton} ${styles.maneuverActionButton}`} onClick={onMoveSherman}>
+              {selectedManeuverAction}
+            </button>
+          )}
+          {selectedManeuverAction === "REVERSE" && (
+            <button className={`${styles.actionButton} ${styles.maneuverActionButton}`} onClick={onReverseSherman}>
+              {selectedManeuverAction}
+            </button>
+          )}
+          {selectedManeuverAction === "TURN" && (
+            <button className={`${styles.actionButton} ${styles.maneuverActionButton}`} onClick={onTurnSherman}>
               {selectedManeuverAction}
             </button>
           )}

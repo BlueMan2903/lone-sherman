@@ -28,5 +28,42 @@ export function axialToPixel(q, r) {
   return { x, y };
 }
 
+// Axial directions for flat-top hexes based on N=0 degrees (clockwise rotation)
+export const ROTATION_N = 0;
+export const ROTATION_NE = 60;
+export const ROTATION_SE = 120;
+export const ROTATION_S = 180;
+export const ROTATION_SW = 240;
+export const ROTATION_NW = 300;
+
+// Axial directions for flat-top hexes based on N=0 degrees (clockwise rotation)
+const AXIAL_DIRECTIONS = [
+  { q: 0, r: 1 },   // N (0 degrees)
+  { q: 1, r: 0 },   // NE (60 degrees)
+  { q: 1, r: -1 },  // SE (120 degrees)
+  { q: 0, r: -1 },  // S (180 degrees)
+  { q: -1, r: 0 },  // SW (240 degrees)
+  { q: -1, r: 1 }   // NW (300 degrees)
+];
+
+/**
+ * Calculates the coordinates of a neighboring hex in a given direction.
+ * @param {{q: number, r: number}} currentHex The axial coordinates of the current hex.
+ * @param {number} rotationDegrees The rotation of the unit in degrees (0, 60, 120, 180, 240, 300).
+ * @returns {{q: number, r: number}} The axial coordinates of the neighboring hex.
+ */
+export function getNeighborHex(currentHex, rotationDegrees) {
+  // Normalize rotation to be within 0-300 and map to array index
+  const normalizedRotation = (rotationDegrees % 360 + 360) % 360;
+  const directionIndex = normalizedRotation / 60;
+
+  const direction = AXIAL_DIRECTIONS[directionIndex];
+
+  return {
+    q: currentHex.q + direction.q,
+    r: currentHex.r + direction.r
+  };
+}
+
 // Export these for use in Hex.jsx to set element dimensions
 export { HEX_WIDTH, HEX_HEIGHT };

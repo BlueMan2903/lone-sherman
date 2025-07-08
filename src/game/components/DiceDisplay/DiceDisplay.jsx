@@ -40,7 +40,7 @@ function DiceDisplay({ results, onDieClick, selectedIndex }) {
             src={imgSrc}
             alt={`Dice roll ${roll}`}
             className={`${styles.diceImage} ${isSelected ? styles.selected : ''}`}
-            onClick={() => onDieClick(roll, index)}
+            onClick={() => onDieClick(roll, index, getDiceAction(roll))}
           />
         );
       })}

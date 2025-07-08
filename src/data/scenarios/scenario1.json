@@ -50,7 +50,7 @@
       "faction": "player",
       "sprite": "sherman.png",
       "currentHex": {"q": 5, "r": -1},
-      "rotation": -60,
+      "rotation": 300,
       "crew": {
         "commander": "buttoned up",
         "loader": "alive",

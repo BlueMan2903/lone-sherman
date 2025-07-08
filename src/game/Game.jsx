@@ -3,6 +3,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import HexGrid from './components/HexGrid/HexGrid';
 import TankStatusDisplay from './components/TankStatusDisplay/TankStatusDisplay';
 import TurnActions from './components/TurnActions/TurnActions';
+import { getNeighborHex } from './logic/hexUtils';
 import scenario1Data from '../data/scenarios/scenario1.json';
 import styles from './Game.module.css';
 
@@ -97,6 +98,35 @@ function Game() {
     console.log("Attack action initiated from Game component!");
   };
 
+  const handleMoveSherman = useCallback(() => {
+    setCurrentScenario(prevScenario => {
+      if (!prevScenario) return null;
+
+      const newScenario = JSON.parse(JSON.stringify(prevScenario));
+      const shermanIndex = newScenario.units.findIndex(unit => unit.id.includes("sherman"));
+
+      if (shermanIndex !== -1) {
+        const sherman = newScenario.units[shermanIndex];
+        const newHex = getNeighborHex(sherman.currentHex, sherman.rotation);
+        sherman.currentHex = newHex;
+        console.log(`Sherman moved to q:${newHex.q}, r:${newHex.r}`);
+      } else {
+        console.warn("Sherman unit not found for movement.");
+      }
+      return newScenario;
+    });
+  }, []);
+
+  const handleReverseSherman = useCallback(() => {
+    console.log("Sherman reversed!");
+    // Add logic for reversing the Sherman here
+  }, []);
+
+  const handleTurnSherman = useCallback(() => {
+    console.log("Sherman turned!");
+    // Add logic for turning the Sherman here
+  }, []);
+
   if (!currentScenario) {
     return <div>Loading game...</div>;
   }
@@ -158,6 +188,9 @@ function Game() {
           onCommanderDecision={handleCommanderDecision}
           shermanUnit={shermanUnit}
           currentScenario={currentScenario}
+          onMoveSherman={handleMoveSherman}
+          onReverseSherman={handleReverseSherman}
+          onTurnSherman={handleTurnSherman}
         />
       </div>
     </div>

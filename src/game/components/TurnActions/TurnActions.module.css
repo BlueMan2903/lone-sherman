@@ -110,3 +110,12 @@
   gap: 10px;
   justify-content: space-around; /* Distribute space evenly */
 }
+
+.endPhaseButton {
+  background-color: #6c757d; /* Grey */
+  color: white;
+}
+
+.endPhaseButton:hover {
+  background-color: #5a6268; /* Darker grey */
+}

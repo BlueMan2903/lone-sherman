@@ -17,6 +17,7 @@ function TurnActions({ onManeuver, onAttack, onStartTurnLogic, onCommanderDecisi
   const [maneuverExpended, setManeuverExpended] = useState(false);
   const [showTurnButtons, setShowTurnButtons] = useState(false);
   const [showDoublesManeuverOptions, setShowDoublesManeuverOptions] = useState(false);
+  const [showEndPhaseButton, setShowEndPhaseButton] = useState(false);
 
   useEffect(() => {
     if (diceResults.length > 0 && diceResults.length === expendedDice.length) {
@@ -129,10 +130,23 @@ function TurnActions({ onManeuver, onAttack, onStartTurnLogic, onCommanderDecisi
     setSelectedDiceForDoubles([]);
     setIsDoublesActive(false);
     setShowDoublesManeuverOptions(false);
+    setShowEndPhaseButton(false);
     setCurrentPhase('commander_decision'); // Move to commander decision phase
     if (onStartTurnLogic) {
       onStartTurnLogic(); // Call Game.jsx's start turn logic
     }
+  };
+
+  const handleEndPhaseClick = () => {
+    const allDiceIndices = diceResults.map((_, index) => index);
+    const unexpendedDice = allDiceIndices.filter(index => !expendedDice.includes(index));
+    setExpendedDice(prev => [...prev, ...unexpendedDice]);
+    setSelectedDieIndex(null);
+    setSelectedManeuverAction(null);
+    setSelectedDiceForDoubles([]);
+    setIsDoublesActive(false);
+    setShowDoublesManeuverOptions(false);
+    setShowTurnButtons(false);
   };
 
   const handleCommanderDecision = (position) => {
@@ -314,6 +328,11 @@ function TurnActions({ onManeuver, onAttack, onStartTurnLogic, onCommanderDecisi
                 RIGHT
               </button>
             </div>
+          )}
+          {(diceResults.length > 0 && expendedDice.length < diceResults.length) && (
+            <button className={`${styles.actionButton} ${styles.endPhaseButton}`} onClick={handleEndPhaseClick}>
+              END PHASE
+            </button>
           )}
           {/* Add an "End Turn" button here later */}
         </>

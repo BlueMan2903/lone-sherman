@@ -95,3 +95,18 @@
   display: flex;
   gap: 10px;
 }
+
+.doublesButton {
+  background-color: var(--color-accent-primary); /* Example color */
+  color: var(--color-bg-main);
+}
+
+.doublesButton:hover {
+  background-color: color-mix(in srgb, var(--color-accent-primary) 90%, black);
+}
+
+.doublesManeuverOptions {
+  display: flex;
+  gap: 10px;
+  justify-content: space-around; /* Distribute space evenly */
+}

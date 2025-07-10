@@ -12,8 +12,11 @@ function TurnActions({ onManeuver, onAttack, onStartTurnLogic, onCommanderDecisi
   const [selectedManeuverAction, setSelectedManeuverAction] = useState(null);
   const [selectedDieIndex, setSelectedDieIndex] = useState(null);
   const [expendedDice, setExpendedDice] = useState([]);
+  const [selectedDiceForDoubles, setSelectedDiceForDoubles] = useState([]);
+  const [isDoublesActive, setIsDoublesActive] = useState(false);
   const [maneuverExpended, setManeuverExpended] = useState(false);
   const [showTurnButtons, setShowTurnButtons] = useState(false);
+  const [showDoublesManeuverOptions, setShowDoublesManeuverOptions] = useState(false);
 
   useEffect(() => {
     if (diceResults.length > 0 && diceResults.length === expendedDice.length) {
@@ -78,10 +81,43 @@ function TurnActions({ onManeuver, onAttack, onStartTurnLogic, onCommanderDecisi
     if (expendedDice.includes(index)) {
       return; // Do nothing if the die is expended
     }
-    console.log("handleDieClick called with roll:", roll, "index:", index, "and action:", action);
-    setSelectedDieIndex(index);
-    console.log("selectedDieIndex after update:", index);
-    setSelectedManeuverAction(action);
+
+    // Case 1: No die is currently selected (first click)
+    if (selectedDieIndex === null && selectedDiceForDoubles.length === 0) {
+      setSelectedDieIndex(index);
+      setSelectedManeuverAction(action);
+      setIsDoublesActive(false); // Ensure doubles is off
+      setSelectedDiceForDoubles([]); // Ensure doubles array is empty
+    }
+    // Case 2: The currently selected single die is clicked again (deselect)
+    else if (selectedDieIndex === index) {
+      setSelectedDieIndex(null);
+      setSelectedManeuverAction(null);
+    }
+    // Case 3: A different die is clicked when a single die is selected (potential double or new single)
+    else if (selectedDieIndex !== null && selectedDieIndex !== index) {
+      const firstDieRoll = diceResults[selectedDieIndex];
+      if (firstDieRoll === roll) {
+        // It's a double!
+        setSelectedDiceForDoubles([selectedDieIndex, index]);
+        setIsDoublesActive(true);
+        setSelectedDieIndex(null); // Clear single selection
+        setSelectedManeuverAction(null); // Action will be chosen by doubles buttons
+      } else {
+        // Not a double, new single selection
+        setSelectedDieIndex(index);
+        setSelectedManeuverAction(action);
+        setIsDoublesActive(false); // Ensure doubles is off
+        setSelectedDiceForDoubles([]); // Ensure doubles array is empty
+      }
+    }
+    // Case 4: A die is clicked when doubles are already active (deselect doubles)
+    else if (isDoublesActive) {
+      setSelectedDiceForDoubles([]);
+      setIsDoublesActive(false);
+      setSelectedDieIndex(null); // Clear any single selection too
+      setSelectedManeuverAction(null);
+    }
   };
 
   // Reset phase when turn starts (e.g., if Game.jsx signals a new turn)
@@ -90,6 +126,9 @@ function TurnActions({ onManeuver, onAttack, onStartTurnLogic, onCommanderDecisi
   const handleStartTurn = () => {
     setManeuverExpended(false);
     setShowTurnButtons(false);
+    setSelectedDiceForDoubles([]);
+    setIsDoublesActive(false);
+    setShowDoublesManeuverOptions(false);
     setCurrentPhase('commander_decision'); // Move to commander decision phase
     if (onStartTurnLogic) {
       onStartTurnLogic(); // Call Game.jsx's start turn logic
@@ -129,24 +168,55 @@ function TurnActions({ onManeuver, onAttack, onStartTurnLogic, onCommanderDecisi
     }
   };
 
-  const handleActionClick = (action) => {
-    if (selectedDieIndex === null) return;
+  const handleActionClick = (action, isDoublesButton = false) => {
+    if (selectedDieIndex === null && !isDoublesActive) return;
 
-    if (action === onTurnSherman) {
-      setShowTurnButtons(true);
-    } else {
-      const actionSuccessful = action(); // e.g., onMoveSherman()
-      if (actionSuccessful) {
-        setExpendedDice([...expendedDice, selectedDieIndex]);
-        setSelectedManeuverAction(null);
-        setSelectedDieIndex(null);
+    let actionSuccessful = false;
+
+    if (isDoublesButton) {
+      setShowDoublesManeuverOptions(true);
+      return;
+    }
+
+    if (isDoublesActive) {
+      if (action === onTurnSherman) {
+        setShowTurnButtons(true);
+        setShowDoublesManeuverOptions(false); // Hide doubles maneuver options
+      } else {
+        actionSuccessful = action();
+        if (actionSuccessful) {
+          setExpendedDice([...expendedDice, ...selectedDiceForDoubles]);
+          setSelectedDiceForDoubles([]);
+          setIsDoublesActive(false);
+          setSelectedManeuverAction(null);
+          setSelectedDieIndex(null);
+          setShowDoublesManeuverOptions(false); // Reset after action
+        }
+      }
+    } else if (selectedDieIndex !== null) {
+      // For single die actions
+      if (action === onTurnSherman) {
+        setShowTurnButtons(true);
+      } else {
+        actionSuccessful = action(); // e.g., onMoveSherman()
+        if (actionSuccessful) {
+          setExpendedDice([...expendedDice, selectedDieIndex]);
+          setSelectedManeuverAction(null);
+          setSelectedDieIndex(null);
+        }
       }
     }
   };
 
   const handleTurnDirectionClick = (direction) => {
     onTurnSherman(direction);
-    setExpendedDice([...expendedDice, selectedDieIndex]);
+    if (isDoublesActive) {
+      setExpendedDice([...expendedDice, ...selectedDiceForDoubles]);
+      setSelectedDiceForDoubles([]);
+      setIsDoublesActive(false);
+    } else {
+      setExpendedDice([...expendedDice, selectedDieIndex]);
+    }
     setSelectedManeuverAction(null);
     setSelectedDieIndex(null);
     setShowTurnButtons(false);
@@ -190,26 +260,50 @@ function TurnActions({ onManeuver, onAttack, onStartTurnLogic, onCommanderDecisi
           >
             Maneuver
           </button>
-          <DiceDisplay results={diceResults} onDieClick={(roll, index, action) => handleDieClick(roll, index, action)} selectedIndex={selectedDieIndex} expendedDice={expendedDice} />
-          {(!diceResults || diceResults.length === 0) && (
+          <DiceDisplay results={diceResults} onDieClick={(roll, index, action) => handleDieClick(roll, index, action)} selectedIndex={selectedDieIndex} expendedDice={expendedDice} selectedDiceForDoubles={selectedDiceForDoubles} />
+          {(!diceResults || diceResults.length === 0) && !isDoublesActive && (
             <button className={`${styles.actionButton} ${styles.attackButton}`} onClick={handleAttackClick}>
               Attack
             </button>
           )}
-          {selectedManeuverAction === "MOVE" && (
+
+          {/* Single Die Actions */}
+          {!isDoublesActive && !showDoublesManeuverOptions && selectedManeuverAction === "MOVE" && (
             <button className={`${styles.actionButton} ${styles.maneuverActionButton}`} onClick={() => handleActionClick(onMoveSherman)}>
-              {selectedManeuverAction}
+              MOVE
             </button>
           )}
-          {selectedManeuverAction === "REVERSE" && (
+          {!isDoublesActive && !showDoublesManeuverOptions && selectedManeuverAction === "REVERSE" && (
             <button className={`${styles.actionButton} ${styles.maneuverActionButton}`} onClick={() => handleActionClick(onReverseSherman)}>
-              {selectedManeuverAction}
+              REVERSE
             </button>
           )}
-          {selectedManeuverAction === "TURN" && !showTurnButtons && (
+          {!isDoublesActive && !showDoublesManeuverOptions && selectedManeuverAction === "TURN" && !showTurnButtons && (
             <button className={`${styles.actionButton} ${styles.maneuverActionButton}`} onClick={() => handleActionClick(onTurnSherman)}>
-              {selectedManeuverAction}
+              TURN
             </button>
+          )}
+
+          {/* Doubles Button */}
+          {isDoublesActive && !showDoublesManeuverOptions && !showTurnButtons && (
+            <button className={`${styles.actionButton} ${styles.doublesButton}`} onClick={() => handleActionClick(null, true)}>
+              DOUBLES
+            </button>
+          )}
+
+          {/* Doubles Maneuver Options */}
+          {isDoublesActive && showDoublesManeuverOptions && (
+            <div className={styles.doublesManeuverOptions}>
+              <button className={`${styles.actionButton} ${styles.maneuverActionButton}`} onClick={() => handleActionClick(onMoveSherman)}>
+                MOVE
+              </button>
+              <button className={`${styles.actionButton} ${styles.maneuverActionButton}`} onClick={() => handleActionClick(onReverseSherman)}>
+                RVRS
+              </button>
+              <button className={`${styles.actionButton} ${styles.maneuverActionButton}`} onClick={() => handleActionClick(onTurnSherman)}>
+                TURN
+              </button>
+            </div>
           )}
           {showTurnButtons && (
             <div className={styles.turnButtons}>

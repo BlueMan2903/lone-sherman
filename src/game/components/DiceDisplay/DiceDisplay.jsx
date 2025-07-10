@@ -4,7 +4,7 @@ import styles from './DiceDisplay.module.css';
 // Dynamically import all dice images
 const diceImages = import.meta.glob('/src/assets/images/dice/*.png', { eager: true });
 
-function DiceDisplay({ results, onDieClick, selectedIndex, expendedDice }) {
+function DiceDisplay({ results, onDieClick, selectedIndex, expendedDice, selectedDiceForDoubles }) {
   console.log("DiceDisplay received selectedIndex:", selectedIndex);
   if (!results || results.length === 0) {
     return null;
@@ -26,7 +26,7 @@ function DiceDisplay({ results, onDieClick, selectedIndex, expendedDice }) {
       {results.map((roll, index) => {
         const imagePath = `/src/assets/images/dice/${roll}.png`;
         const imgSrc = diceImages[imagePath]?.default;
-        const isSelected = index === selectedIndex;
+        const isSelected = index === selectedIndex || selectedDiceForDoubles.includes(index);
         const isExpended = expendedDice.includes(index);
         console.log(`Die ${roll} at index ${index}: isSelected = ${isSelected} (index === selectedIndex: ${index} === ${selectedIndex})`);
 

@@ -24,3 +24,8 @@
   border: 4px solid rgba(255, 200, 200, 0.8); /* White with a smooth red tint */
   /* box-shadow: 0 0 8px rgba(255, 100, 100, 0.7); */
 }
+
+.diceImage.expended {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

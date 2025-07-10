@@ -3,6 +3,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import HexGrid from './components/HexGrid/HexGrid';
 import TankStatusDisplay from './components/TankStatusDisplay/TankStatusDisplay';
 import TurnActions from './components/TurnActions/TurnActions';
+import Notification from './components/Notification/Notification'; // Import Notification
 import { getNeighborHex } from './logic/hexUtils';
 import scenario1Data from '../data/scenarios/scenario1.json';
 import styles from './Game.module.css';
@@ -20,6 +21,7 @@ const selectRandomUniqueElements = (arr, count) => {
 function Game() {
   const [currentScenario, setCurrentScenario] = useState(null);
   const [turnNumber, setTurnNumber] = useState(1);
+  const [notification, setNotification] = useState(null); // State for notification message
 
   const initializeScenarioUnits = useCallback(() => {
     const scenario = JSON.parse(JSON.stringify(scenario1Data));
@@ -99,6 +101,7 @@ function Game() {
   };
 
   const handleMoveSherman = useCallback(() => {
+    let moveSuccessful = false;
     setCurrentScenario(prevScenario => {
       if (!prevScenario) return null;
 
@@ -108,30 +111,101 @@ function Game() {
       if (shermanIndex !== -1) {
         const sherman = newScenario.units[shermanIndex];
         const newHex = getNeighborHex(sherman.currentHex, sherman.rotation);
-        sherman.currentHex = newHex;
-        console.log(`Sherman moved to q:${newHex.q}, r:${newHex.r}`);
+
+        const isOccupied = newScenario.units.some(
+          unit => unit.currentHex.q === newHex.q && unit.currentHex.r === newHex.r
+        );
+
+        const isOffMap = !newScenario.map.hexes.some(
+          hex => hex.q === newHex.q && hex.r === newHex.r
+        );
+
+        if (isOccupied) {
+          setNotification("You can't move to an occupied hex.");
+        } else if (isOffMap) {
+          setNotification("You can't move off the map.");
+        } else {
+          sherman.currentHex = newHex;
+          console.log(`Sherman moved to q:${newHex.q}, r:${newHex.r}`);
+          moveSuccessful = true;
+        }
       } else {
         console.warn("Sherman unit not found for movement.");
       }
       return newScenario;
     });
+    return moveSuccessful;
   }, []);
 
   const handleReverseSherman = useCallback(() => {
-    console.log("Sherman reversed!");
-    // Add logic for reversing the Sherman here
+    let moveSuccessful = false;
+    setCurrentScenario(prevScenario => {
+      if (!prevScenario) return null;
+
+      const newScenario = JSON.parse(JSON.stringify(prevScenario));
+      const shermanIndex = newScenario.units.findIndex(unit => unit.id.includes("sherman"));
+
+      if (shermanIndex !== -1) {
+        const sherman = newScenario.units[shermanIndex];
+        const reverseRotation = (sherman.rotation + 180) % 360;
+        const newHex = getNeighborHex(sherman.currentHex, reverseRotation);
+
+        const isOccupied = newScenario.units.some(
+          unit => unit.currentHex.q === newHex.q && unit.currentHex.r === newHex.r
+        );
+
+        const isOffMap = !newScenario.map.hexes.some(
+          hex => hex.q === newHex.q && hex.r === newHex.r
+        );
+
+        if (isOccupied) {
+          setNotification("You can't move to an occupied hex.");
+        } else if (isOffMap) {
+          setNotification("You can't move off the map.");
+        } else {
+          sherman.currentHex = newHex;
+          console.log(`Sherman reversed to q:${newHex.q}, r:${newHex.r}`);
+          moveSuccessful = true;
+        }
+      } else {
+        console.warn("Sherman unit not found for movement.");
+      }
+      return newScenario;
+    });
+    return moveSuccessful;
   }, []);
 
-  const handleTurnSherman = useCallback(() => {
-    console.log("Sherman turned!");
-    // Add logic for turning the Sherman here
+  const handleTurnSherman = useCallback((direction) => {
+    setCurrentScenario(prevScenario => {
+      if (!prevScenario) return null;
+
+      const newScenario = JSON.parse(JSON.stringify(prevScenario));
+      const shermanIndex = newScenario.units.findIndex(unit => unit.id.includes("sherman"));
+
+      if (shermanIndex !== -1) {
+        const sherman = newScenario.units[shermanIndex];
+        
+        // More robust rotation calculation
+        let newRotation = sherman.rotation + direction;
+        if (newRotation >= 360) {
+          newRotation -= 360;
+        } else if (newRotation < 0) {
+          newRotation += 360;
+        }
+
+        sherman.rotation = newRotation;
+        console.log(`Sherman turned to ${newRotation} degrees`);
+      } else {
+        console.warn("Sherman unit not found for turning.");
+      }
+      return newScenario;
+    });
   }, []);
 
   if (!currentScenario) {
     return <div>Loading game...</div>;
   }
 
-  // Calculate enemy tank count for the objective display
   const enemyTanks = currentScenario.units.filter(unit => unit.faction === 'axis');
   const totalEnemyTanks = enemyTanks.length;
   const destroyedEnemyTanks = enemyTanks.filter(unit => unit.destroyed).length;
@@ -140,6 +214,7 @@ function Game() {
 
   return (
     <div className={styles.gameContainer}>
+      <Notification message={notification} onClose={() => setNotification(null)} />
       {/* Left Section */}
       <div className={styles.leftPanel}>
         <div className={styles.infoContainer}>

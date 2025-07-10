@@ -30,7 +30,7 @@
       {"q": 3, "r": 4, "id": "hex-3-4", "terrain": "field", "shermanSmoke": false, "germanSmoke": false},
       {"q": 3, "r": 5, "id": "hex-3-5", "terrain": "field", "shermanSmoke": false, "germanSmoke": false},
       {"q": 4, "r": -1, "id": "hex-4--1", "terrain": "field", "shermanSmoke": false, "germanSmoke": false},
-      {"q": 4, "r": 0, "id": "hex-4-0", "terrain": "field+curve", "shermanSmoke": false, "germanSmoke": false},
+      {"q": 4, "r": 0, "id": "hex-4-0", "terrain": "field+curve-road", "shermanSmoke": false, "germanSmoke": false},
       {"q": 4, "r": 1, "id": "hex-4-1", "terrain": "buildings-curve-left-road", "shermanSmoke": false, "germanSmoke": false},
       {"q": 4, "r": 2, "id": "hex-4-2", "terrain": "mud", "shermanSmoke": false, "germanSmoke": false},
       {"q": 4, "r": 3, "id": "hex-4-3", "terrain": "forest", "shermanSmoke": false, "germanSmoke": false},

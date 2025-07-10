@@ -1,5 +1,5 @@
 // src/game/components/Unit/Unit.jsx
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import styles from './Unit.module.css';
 
 // Dynamically import unit sprites from the assets folder
@@ -9,7 +9,30 @@ const unitSprites = import.meta.glob('/src/assets/images/units/*.png', { eager: 
 
 function Unit({ unitData, pixelX, pixelY, hexHeight }) {
   // Destructure 'rotation' from unitData
-  const { sprite, rotation } = unitData; // <-- UPDATED LINE: Added rotation
+  const { sprite, rotation } = unitData;
+  const imageRef = useRef(null);
+  const rotationRef = useRef(rotation); // Initialize with the initial rotation
+
+  useEffect(() => {
+    if (imageRef.current && rotation !== undefined && rotation !== null) {
+      let currentVisualRotation = rotationRef.current % 360;
+      if (currentVisualRotation < 0) currentVisualRotation += 360; // Ensure positive modulo
+
+      let targetRotation = rotation;
+
+      let diff = targetRotation - currentVisualRotation;
+
+      // Normalize diff to be within -180 to 180 degrees for shortest path
+      if (diff > 180) {
+        diff -= 360;
+      } else if (diff < -180) {
+        diff += 360;
+      }
+
+      rotationRef.current += diff;
+      imageRef.current.style.setProperty('--rotation-angle', `${rotationRef.current}deg`);
+    }
+  }, [rotation]);
 
   if (!unitData || !sprite) { // Changed unitData.sprite to sprite directly
     return null; // Don't render if no sprite info
@@ -36,8 +59,6 @@ function Unit({ unitData, pixelX, pixelY, hexHeight }) {
   };
 
   const imageStyle = {
-    // Add transform for rotation if 'rotation' is defined
-    transform: rotation !== undefined && rotation !== null ? `rotate(${rotation}deg)` : 'none',
     // Ensure the rotation origin is the center of the unit image
     transformOrigin: 'center center',
   };
@@ -45,10 +66,11 @@ function Unit({ unitData, pixelX, pixelY, hexHeight }) {
   return (
     <div className={styles.unitContainer} style={containerStyle}>
       <img
+        ref={imageRef}
         src={spriteSrc}
         alt={unitData.name || 'Unit'} // Use unitData.name for alt text
         className={styles.unitImage}
-        style={imageStyle} // Apply the new imageStyle here
+        style={{ transformOrigin: 'center center' }} // Apply transform-origin here
       />
     </div>
   );

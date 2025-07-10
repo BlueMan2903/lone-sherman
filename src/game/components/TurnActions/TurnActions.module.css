@@ -60,6 +60,11 @@
   background-color: #c82333; /* Darker red */
 }
 
+.maneuverButton.expended {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 
 .phaseInstruction { /* NEW STYLE */
   color: var(--color-text-primary);
@@ -84,4 +89,9 @@
 
 .maneuverActionButton:hover {
   background-color: #0056b3; /* Darker blue, matches startButton:hover */
+}
+
+.turnButtons {
+  display: flex;
+  gap: 10px;
 }

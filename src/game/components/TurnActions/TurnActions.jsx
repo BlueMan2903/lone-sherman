@@ -11,6 +11,19 @@ function TurnActions({ onManeuver, onAttack, onStartTurnLogic, onCommanderDecisi
   const [diceResults, setDiceResults] = useState([]);
   const [selectedManeuverAction, setSelectedManeuverAction] = useState(null);
   const [selectedDieIndex, setSelectedDieIndex] = useState(null);
+  const [expendedDice, setExpendedDice] = useState([]);
+  const [maneuverExpended, setManeuverExpended] = useState(false);
+  const [showTurnButtons, setShowTurnButtons] = useState(false);
+
+  useEffect(() => {
+    if (diceResults.length > 0 && diceResults.length === expendedDice.length) {
+      setManeuverExpended(true);
+      setTimeout(() => {
+        setDiceResults([]);
+        setExpendedDice([]);
+      }, 500); // 0.5s delay
+    }
+  }, [expendedDice, diceResults]);
 
   
 
@@ -62,6 +75,9 @@ function TurnActions({ onManeuver, onAttack, onStartTurnLogic, onCommanderDecisi
   };
 
   const handleDieClick = (roll, index, action) => {
+    if (expendedDice.includes(index)) {
+      return; // Do nothing if the die is expended
+    }
     console.log("handleDieClick called with roll:", roll, "index:", index, "and action:", action);
     setSelectedDieIndex(index);
     console.log("selectedDieIndex after update:", index);
@@ -72,6 +88,8 @@ function TurnActions({ onManeuver, onAttack, onStartTurnLogic, onCommanderDecisi
   // For now, onStartTurnLogic will trigger the phase change directly.
   // In a more complex setup, you might pass turnNumber as a prop and reset on change.
   const handleStartTurn = () => {
+    setManeuverExpended(false);
+    setShowTurnButtons(false);
     setCurrentPhase('commander_decision'); // Move to commander decision phase
     if (onStartTurnLogic) {
       onStartTurnLogic(); // Call Game.jsx's start turn logic
@@ -111,6 +129,29 @@ function TurnActions({ onManeuver, onAttack, onStartTurnLogic, onCommanderDecisi
     }
   };
 
+  const handleActionClick = (action) => {
+    if (selectedDieIndex === null) return;
+
+    if (action === onTurnSherman) {
+      setShowTurnButtons(true);
+    } else {
+      const actionSuccessful = action(); // e.g., onMoveSherman()
+      if (actionSuccessful) {
+        setExpendedDice([...expendedDice, selectedDieIndex]);
+        setSelectedManeuverAction(null);
+        setSelectedDieIndex(null);
+      }
+    }
+  };
+
+  const handleTurnDirectionClick = (direction) => {
+    onTurnSherman(direction);
+    setExpendedDice([...expendedDice, selectedDieIndex]);
+    setSelectedManeuverAction(null);
+    setSelectedDieIndex(null);
+    setShowTurnButtons(false);
+  };
+
   return (
     <div className={styles.actionButtonsContainer}>
       {currentPhase === 'initial' && (
@@ -142,33 +183,43 @@ function TurnActions({ onManeuver, onAttack, onStartTurnLogic, onCommanderDecisi
       {currentPhase === 'sherman_operations' && (
         <>
           <button
-            className={`${styles.actionButton} ${styles.maneuverButton}`}
+            className={`${styles.actionButton} ${styles.maneuverButton} ${maneuverExpended ? styles.expended : ''}`}
             onClick={handleManeuverClick}
             title={`Roll ${calculateManeuverDice().totalDice} dice\n${calculateManeuverDice().reasons.join('\n')}`}
-            disabled={diceResults.length > 0}
+            disabled={diceResults.length > 0 || maneuverExpended}
           >
             Maneuver
           </button>
-          <DiceDisplay results={diceResults} onDieClick={(roll, index, action) => handleDieClick(roll, index, action)} selectedIndex={selectedDieIndex} />
+          <DiceDisplay results={diceResults} onDieClick={(roll, index, action) => handleDieClick(roll, index, action)} selectedIndex={selectedDieIndex} expendedDice={expendedDice} />
           {(!diceResults || diceResults.length === 0) && (
             <button className={`${styles.actionButton} ${styles.attackButton}`} onClick={handleAttackClick}>
               Attack
             </button>
           )}
           {selectedManeuverAction === "MOVE" && (
-            <button className={`${styles.actionButton} ${styles.maneuverActionButton}`} onClick={onMoveSherman}>
+            <button className={`${styles.actionButton} ${styles.maneuverActionButton}`} onClick={() => handleActionClick(onMoveSherman)}>
               {selectedManeuverAction}
             </button>
           )}
           {selectedManeuverAction === "REVERSE" && (
-            <button className={`${styles.actionButton} ${styles.maneuverActionButton}`} onClick={onReverseSherman}>
+            <button className={`${styles.actionButton} ${styles.maneuverActionButton}`} onClick={() => handleActionClick(onReverseSherman)}>
               {selectedManeuverAction}
             </button>
           )}
-          {selectedManeuverAction === "TURN" && (
-            <button className={`${styles.actionButton} ${styles.maneuverActionButton}`} onClick={onTurnSherman}>
+          {selectedManeuverAction === "TURN" && !showTurnButtons && (
+            <button className={`${styles.actionButton} ${styles.maneuverActionButton}`} onClick={() => handleActionClick(onTurnSherman)}>
               {selectedManeuverAction}
             </button>
+          )}
+          {showTurnButtons && (
+            <div className={styles.turnButtons}>
+              <button className={`${styles.actionButton} ${styles.maneuverActionButton}`} onClick={() => handleTurnDirectionClick(-60)}>
+                LEFT
+              </button>
+              <button className={`${styles.actionButton} ${styles.maneuverActionButton}`} onClick={() => handleTurnDirectionClick(60)}>
+                RIGHT
+              </button>
+            </div>
           )}
           {/* Add an "End Turn" button here later */}
         </>

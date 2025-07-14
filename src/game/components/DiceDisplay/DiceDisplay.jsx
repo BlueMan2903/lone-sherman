@@ -4,22 +4,11 @@ import styles from './DiceDisplay.module.css';
 // Dynamically import all dice images
 const diceImages = import.meta.glob('/src/assets/images/dice/*.png', { eager: true });
 
-function DiceDisplay({ results, onDieClick, selectedIndex, expendedDice, selectedDiceForDoubles }) {
+function DiceDisplay({ results, onDieClick, selectedIndex, expendedDice, selectedDiceForDoubles, getActionForRoll }) {
   console.log("DiceDisplay received selectedIndex:", selectedIndex);
   if (!results || results.length === 0) {
     return null;
   }
-
-  const getDiceAction = (roll) => {
-    if (roll === 1) {
-      return "REVERSE";
-    } else if (roll >= 2 && roll <= 4) {
-      return "TURN";
-    } else if (roll >= 5 && roll <= 6) {
-      return "MOVE";
-    }
-    return "";
-  };
 
   return (
     <div className={styles.diceContainer}>
@@ -41,7 +30,7 @@ function DiceDisplay({ results, onDieClick, selectedIndex, expendedDice, selecte
             src={imgSrc}
             alt={`Dice roll ${roll}`}
             className={`${styles.diceImage} ${isSelected ? styles.selected : ''} ${isExpended ? styles.expended : ''}`}
-            onClick={() => onDieClick(roll, index, getDiceAction(roll))}
+            onClick={() => onDieClick(roll, index, getActionForRoll(roll))}
           />
         );
       })}

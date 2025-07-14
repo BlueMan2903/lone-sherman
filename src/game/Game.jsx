@@ -202,6 +202,24 @@ function Game() {
     });
   }, []);
 
+  const handleUpdateUnit = useCallback((unitId, updates) => {
+    setCurrentScenario(prevScenario => {
+      if (!prevScenario) return null;
+
+      const newScenario = JSON.parse(JSON.stringify(prevScenario));
+      const unitIndex = newScenario.units.findIndex(unit => unit.id === unitId);
+
+      if (unitIndex !== -1) {
+        newScenario.units[unitIndex] = { ...newScenario.units[unitIndex], ...updates };
+        console.log(`Unit ${unitId} updated:`, updates);
+      } else {
+        console.warn(`Unit with ID ${unitId} not found for update.`);
+      }
+      return newScenario;
+    });
+    return true; // Assume success for now
+  }, []);
+
   if (!currentScenario) {
     return <div>Loading game...</div>;
   }
@@ -266,6 +284,7 @@ function Game() {
           onMoveSherman={handleMoveSherman}
           onReverseSherman={handleReverseSherman}
           onTurnSherman={handleTurnSherman}
+          onUpdateUnit={handleUpdateUnit}
         />
       </div>
     </div>

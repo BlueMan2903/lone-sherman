@@ -4,7 +4,7 @@ import HexGrid from './components/HexGrid/HexGrid';
 import TankStatusDisplay from './components/TankStatusDisplay/TankStatusDisplay';
 import TurnActions from './components/TurnActions/TurnActions';
 import Notification from './components/Notification/Notification'; // Import Notification
-import { getNeighborHex } from './logic/hexUtils';
+import { getNeighborHex, getHexesInLine } from './logic/hexUtils';
 import scenario1Data from '../data/scenarios/scenario1.json';
 import styles from './Game.module.css';
 
@@ -285,6 +285,8 @@ function Game() {
           onReverseSherman={handleReverseSherman}
           onTurnSherman={handleTurnSherman}
           onUpdateUnit={handleUpdateUnit}
+          onSetNotification={setNotification}
+          getHexesInLine={getHexesInLine}
         />
       </div>
     </div>

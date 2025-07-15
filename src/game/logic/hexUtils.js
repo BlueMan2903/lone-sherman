@@ -65,5 +65,29 @@ export function getNeighborHex(currentHex, rotationDegrees) {
   };
 }
 
+export function getHexesInLine(startHex, rotationDegrees, allHexes) {
+  const normalizedRotation = (rotationDegrees % 360 + 360) % 360;
+  const directionIndex = normalizedRotation / 60;
+  const direction = AXIAL_DIRECTIONS[directionIndex];
+  const lineOfHexes = [];
+  let currentHex = { ...startHex };
+
+  while (true) {
+    currentHex = {
+      q: currentHex.q + direction.q,
+      r: currentHex.r + direction.r
+    };
+
+    const hexExists = allHexes.some(h => h.q === currentHex.q && h.r === currentHex.r);
+    if (!hexExists) {
+      break; // Stop if we go off the map
+    }
+
+    lineOfHexes.push(currentHex);
+  }
+
+  return lineOfHexes;
+}
+
 // Export these for use in Hex.jsx to set element dimensions
 export { HEX_WIDTH, HEX_HEIGHT };

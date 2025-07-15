@@ -4,7 +4,7 @@ import styles from './TurnActions.module.css';
 import diceRollingSound from '../../../assets/sounds/dice-rolling.mp3';
 import DiceDisplay from '../DiceDisplay/DiceDisplay';
 
-function TurnActions({ onManeuver, onAttack, onStartTurnLogic, onCommanderDecision, shermanUnit, currentScenario, onMoveSherman, onReverseSherman, onTurnSherman }) {
+function TurnActions({ onManeuver, onAttack, onStartTurnLogic, onCommanderDecision, shermanUnit, currentScenario, onMoveSherman, onReverseSherman, onTurnSherman, onUpdateUnit, onSetNotification, getHexesInLine }) {
   // State to manage the current phase of the player's turn
   // 'initial' -> 'commander_decision' -> 'sherman_operations'
   const [currentPhase, setCurrentPhase] = useState('initial');
@@ -18,7 +18,9 @@ function TurnActions({ onManeuver, onAttack, onStartTurnLogic, onCommanderDecisi
   const [attackExpended, setAttackExpended] = useState(false);
   const [showTurnButtons, setShowTurnButtons] = useState(false);
   const [showDoublesManeuverOptions, setShowDoublesManeuverOptions] = useState(false);
+  const [showDoublesAttackOptions, setShowDoublesAttackOptions] = useState(false);
   const [currentActionType, setCurrentActionType] = useState(null); // 'maneuver' or 'attack'
+  const [showMiscellaneousButton, setShowMiscellaneousButton] = useState(false);
 
   useEffect(() => {
     if (diceResults.length > 0 && diceResults.length === expendedDice.length) {
@@ -33,7 +35,13 @@ function TurnActions({ onManeuver, onAttack, onStartTurnLogic, onCommanderDecisi
         setCurrentActionType(null);
       }, 500); // 0.5s delay
     }
-  }, [expendedDice, diceResults]);
+  }, [expendedDice, diceResults, currentActionType]);
+
+  useEffect(() => {
+    if (maneuverExpended && attackExpended) {
+      setShowMiscellaneousButton(true);
+    }
+  }, [maneuverExpended, attackExpended]);
 
   
 
@@ -198,6 +206,8 @@ function TurnActions({ onManeuver, onAttack, onStartTurnLogic, onCommanderDecisi
   // In a more complex setup, you might pass turnNumber as a prop and reset on change.
   const handleStartTurn = () => {
     setManeuverExpended(false);
+    setAttackExpended(false);
+    setShowMiscellaneousButton(false);
     setShowTurnButtons(false);
     setSelectedDiceForDoubles([]);
     setIsDoublesActive(false);
@@ -271,7 +281,11 @@ function TurnActions({ onManeuver, onAttack, onStartTurnLogic, onCommanderDecisi
     let actionSuccessful = false;
 
     if (isDoublesButton) {
-      setShowDoublesManeuverOptions(true);
+      if (currentActionType === 'maneuver') {
+        setShowDoublesManeuverOptions(true);
+      } else if (currentActionType === 'attack') {
+        setShowDoublesAttackOptions(true);
+      }
       return;
     }
 
@@ -357,14 +371,16 @@ function TurnActions({ onManeuver, onAttack, onStartTurnLogic, onCommanderDecisi
 
       {currentPhase === 'sherman_operations' && (
         <>
-          <button
-            className={`${styles.actionButton} ${styles.maneuverButton} ${maneuverExpended ? styles.expended : ''}`}
-            onClick={handleManeuverClick}
-            title={`Roll ${calculateManeuverDice().totalDice} dice\n${calculateManeuverDice().reasons.join('\n')}`}
-            disabled={diceResults.length > 0 || maneuverExpended}
-          >
-            Maneuver
-          </button>
+          {diceResults.length === 0 && !showMiscellaneousButton && (
+            <button
+              className={`${styles.actionButton} ${styles.maneuverButton} ${maneuverExpended ? styles.expended : ''}`}
+              onClick={handleManeuverClick}
+              title={`Roll ${calculateManeuverDice().totalDice} dice\n${calculateManeuverDice().reasons.join('\n')}`}
+              disabled={maneuverExpended}
+            >
+              Maneuver
+            </button>
+          )}
           <DiceDisplay 
             results={diceResults} 
             onDieClick={handleDieClick} 
@@ -373,12 +389,12 @@ function TurnActions({ onManeuver, onAttack, onStartTurnLogic, onCommanderDecisi
             selectedDiceForDoubles={selectedDiceForDoubles}
             getActionForRoll={currentActionType === 'maneuver' ? getManeuverActionForRoll : getAttackActionForRoll}
           />
-          {(!diceResults || diceResults.length === 0) && !isDoublesActive && (
+          {diceResults.length === 0 && !showMiscellaneousButton && (
             <button
-              className={`${styles.actionButton} ${styles.attackButton}`}
+              className={`${styles.actionButton} ${styles.attackButton} ${attackExpended ? styles.expended : ''}`}
               onClick={handleAttackClick}
               title={`Roll ${calculateAttackDice().totalDice} dice\n${calculateAttackDice().reasons.join('\n')}`}
-              disabled={diceResults.length > 0}
+              disabled={attackExpended}
             >
               Attack
             </button>
@@ -392,7 +408,26 @@ function TurnActions({ onManeuver, onAttack, onStartTurnLogic, onCommanderDecisi
               {selectedAction === "TURN" && !showTurnButtons && <button className={`${styles.actionButton} ${styles.maneuverActionButton}`} onClick={() => handleActionClick(onTurnSherman)}>TURN</button>}
               {selectedAction === "LOAD" && <button className={`${styles.actionButton} ${styles.attackActionButton}`} onClick={() => handleActionClick(() => onUpdateUnit(shermanUnit.id, { mainGunStatus: 'loaded' }))}>LOAD</button>}
               {selectedAction === "FIRE MACHINE GUN" && <button className={`${styles.actionButton} ${styles.attackActionButton}`} onClick={() => handleActionClick(() => console.log("FIRE MACHINE GUN"))}>FIRE MACHINE GUN</button>}
-              {selectedAction === "FIRE MAIN GUN" && <button className={`${styles.actionButton} ${styles.attackActionButton}`} onClick={() => handleActionClick(() => console.log("Fire Main Gun"))}>FIRE MAIN GUN</button>}
+                            {selectedAction === "FIRE MAIN GUN" && <button className={`${styles.actionButton} ${styles.attackActionButton}`} onClick={() => handleActionClick(() => {
+                if (shermanUnit.mainGunStatus !== 'loaded') {
+                  onSetNotification("Main gun unloaded. Can't fire.");
+                  return false; // Indicate action failed
+                }
+
+                const lineOfFire = getHexesInLine(shermanUnit.currentHex, shermanUnit.rotation, currentScenario.map.hexes);
+                const enemyInLineOfFire = currentScenario.units.find(unit => 
+                  unit.faction === 'axis' && 
+                  lineOfFire.some(hex => hex.q === unit.currentHex.q && hex.r === unit.currentHex.r)
+                );
+
+                if (!enemyInLineOfFire) {
+                  onSetNotification("There is nothing in front of you to fire at");
+                  return false; // Indicate action failed
+                }
+
+                console.log("Fire Main Gun at", enemyInLineOfFire);
+                return true; // Indicate action succeeded
+              })}>FIRE MAIN GUN</button>}
             </>
           )}
 
@@ -417,6 +452,40 @@ function TurnActions({ onManeuver, onAttack, onStartTurnLogic, onCommanderDecisi
               </button>
             </div>
           )}
+
+          {/* Doubles Attack Options */}
+          {isDoublesActive && showDoublesAttackOptions && (
+            <div className={styles.doublesAttackOptions}>
+              <button className={`${styles.actionButton} ${styles.attackActionButton}`} onClick={() => handleActionClick(() => onUpdateUnit(shermanUnit.id, { mainGunStatus: 'loaded' }))}>
+                LOAD
+              </button>
+              <button className={`${styles.actionButton} ${styles.attackActionButton}`} onClick={() => handleActionClick(() => {
+                if (shermanUnit.mainGunStatus !== 'loaded') {
+                  onSetNotification("Main gun unloaded. Can't fire.");
+                  return false;
+                }
+
+                const lineOfFire = getHexesInLine(shermanUnit.currentHex, shermanUnit.rotation, currentScenario.map.hexes);
+                const enemyInLineOfFire = currentScenario.units.find(unit => 
+                  unit.faction === 'axis' && 
+                  lineOfFire.some(hex => hex.q === unit.currentHex.q && hex.r === unit.currentHex.r)
+                );
+
+                if (!enemyInLineOfFire) {
+                  onSetNotification("There is nothing in front of you to fire at");
+                  return false;
+                }
+
+                console.log("Fire Main Gun at", enemyInLineOfFire);
+                return true;
+              })}>
+                MAIN GUN
+              </button>
+              <button className={`${styles.actionButton} ${styles.attackActionButton}`} onClick={() => { console.log("FIRE MACHINE GUN"); return true; }}>
+                MG
+              </button>
+            </div>
+          )}
           {showTurnButtons && (
             <div className={styles.turnButtons}>
               <button className={`${styles.actionButton} ${styles.maneuverActionButton}`} onClick={() => handleTurnDirectionClick(-60)}>
@@ -430,6 +499,12 @@ function TurnActions({ onManeuver, onAttack, onStartTurnLogic, onCommanderDecisi
           {(diceResults.length > 0 && expendedDice.length < diceResults.length) && (
             <button className={`${styles.actionButton} ${styles.endPhaseButton}`} onClick={handleEndPhaseClick}>
               END PHASE
+            </button>
+          )}
+
+          {showMiscellaneousButton && (
+            <button className={`${styles.actionButton} ${styles.miscellaneousButton}`} onClick={() => console.log("Miscellaneous button clicked!")}>
+              Miscellaneous
             </button>
           )}
           {/* Add an "End Turn" button here later */}

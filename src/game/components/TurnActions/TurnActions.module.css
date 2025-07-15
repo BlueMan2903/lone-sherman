@@ -53,11 +53,22 @@
 }
 
 .attackButton {
-  background-color: #dc3545; /* Red */
+  background-color: #dc3545; /* Red, matches attackButton */
+  color: white;
 }
 
 .attackButton:hover {
-  background-color: #c82333; /* Darker red */
+  background-color: #c82333; /* Darker red, matches attackButton:hover */
+}
+
+
+.attackActionButton {
+  background-color: #007bff; /* Blue */
+  color: white;
+}
+
+.attackActionButton:hover {
+  background-color: #0056b3; /* Darker blue */
 }
 
 .maneuverButton.expended {

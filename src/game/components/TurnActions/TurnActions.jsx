@@ -141,7 +141,7 @@ function TurnActions({ onManeuver, onAttack, onStartTurnLogic, onCommanderDecisi
 
   const getAttackActionForRoll = (roll) => {
     if (roll >= 1 && roll <= 2) return "LOAD";
-    if (roll >= 3 && roll <= 4) return "FIRE MG";
+    if (roll >= 3 && roll <= 4) return "FIRE MACHINE GUN";
     if (roll >= 5 && roll <= 6) return "FIRE MAIN GUN";
     return null;
   };
@@ -391,7 +391,7 @@ function TurnActions({ onManeuver, onAttack, onStartTurnLogic, onCommanderDecisi
               {selectedAction === "REVERSE" && <button className={`${styles.actionButton} ${styles.maneuverActionButton}`} onClick={() => handleActionClick(onReverseSherman)}>REVERSE</button>}
               {selectedAction === "TURN" && !showTurnButtons && <button className={`${styles.actionButton} ${styles.maneuverActionButton}`} onClick={() => handleActionClick(onTurnSherman)}>TURN</button>}
               {selectedAction === "LOAD" && <button className={`${styles.actionButton} ${styles.attackActionButton}`} onClick={() => handleActionClick(() => onUpdateUnit(shermanUnit.id, { mainGunStatus: 'loaded' }))}>LOAD</button>}
-              {selectedAction === "FIRE MG" && <button className={`${styles.actionButton} ${styles.attackActionButton}`} onClick={() => handleActionClick(() => console.log("Fire MG"))}>FIRE MG</button>}
+              {selectedAction === "FIRE MACHINE GUN" && <button className={`${styles.actionButton} ${styles.attackActionButton}`} onClick={() => handleActionClick(() => console.log("FIRE MACHINE GUN"))}>FIRE MACHINE GUN</button>}
               {selectedAction === "FIRE MAIN GUN" && <button className={`${styles.actionButton} ${styles.attackActionButton}`} onClick={() => handleActionClick(() => console.log("Fire Main Gun"))}>FIRE MAIN GUN</button>}
             </>
           )}

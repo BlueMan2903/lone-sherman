@@ -4,7 +4,7 @@ import HexGrid from './components/HexGrid/HexGrid';
 import TankStatusDisplay from './components/TankStatusDisplay/TankStatusDisplay';
 import TurnActions from './components/TurnActions/TurnActions';
 import Notification from './components/Notification/Notification'; // Import Notification
-import { getNeighborHex, getHexesInLine } from './logic/hexUtils';
+import { getNeighborHex, getHexesInLine, hasClearPath, getDistance, getFiringArcHexes } from './logic/hexUtils';
 import scenario1Data from '../data/scenarios/scenario1.json';
 import styles from './Game.module.css';
 
@@ -22,6 +22,7 @@ function Game() {
   const [currentScenario, setCurrentScenario] = useState(null);
   const [turnNumber, setTurnNumber] = useState(1);
   const [notification, setNotification] = useState(null); // State for notification message
+  const [isTargetingMode, setIsTargetingMode] = useState(false);
 
   const initializeScenarioUnits = useCallback(() => {
     const scenario = JSON.parse(JSON.stringify(scenario1Data));
@@ -99,6 +100,52 @@ function Game() {
   const handleAttack = () => {
     console.log("Attack action initiated from Game component!");
   };
+
+  const handleFireMainGun = useCallback(() => {
+    const shermanUnit = currentScenario.units.find(u => u.id.includes("sherman"));
+
+    if (shermanUnit.turretDamaged === "Yes") {
+      setNotification("Main gun is damaged, can't fire until repaired!");
+      return;
+    }
+
+    if (shermanUnit.mainGunStatus !== 'loaded') {
+      setNotification("Main gun unloaded. Can't fire.");
+      return;
+    }
+
+    setIsTargetingMode(true);
+    setNotification("Select an enemy unit to fire upon.");
+  }, [currentScenario]);
+
+  const onUnitClick = useCallback((unit) => {
+    if (!isTargetingMode) return;
+
+    const shermanUnit = currentScenario.units.find(u => u.id.includes("sherman"));
+    
+    // Check if target is in firing arc
+    const firingArcHexes = getFiringArcHexes(shermanUnit.currentHex, shermanUnit.rotation, currentScenario.map.hexes);
+    const targetInFiringArc = firingArcHexes.some(hex => hex.q === unit.currentHex.q && hex.r === unit.currentHex.r);
+
+    if (!targetInFiringArc) {
+      setNotification("Invalid target: not on a straight line");
+      setIsTargetingMode(false);
+      return;
+    }
+
+    const losCheck = hasClearPath(shermanUnit.currentHex, unit.currentHex, currentScenario.map.hexes);
+
+    if (losCheck.blocked) {
+      setNotification(`Line of sight blocked by ${losCheck.blockingTerrain}.`);
+    } else {
+      const distance = getDistance(shermanUnit.currentHex, unit.currentHex);
+      console.log(`Distance to target: ${distance} hexes`);
+      setNotification(`Distance to target: ${distance} hexes`);
+    }
+
+    setIsTargetingMode(false);
+    setNotification(""); // Clear the message
+  }, [isTargetingMode, currentScenario]);
 
   const handleMoveSherman = useCallback(() => {
     let moveSuccessful = false;
@@ -267,6 +314,8 @@ function Game() {
           <HexGrid
             hexes={currentScenario.map.hexes}
             units={currentScenario.units || []}
+            onUnitClick={onUnitClick}
+            isTargetingMode={isTargetingMode}
           />
         </div>
       </div>
@@ -287,6 +336,8 @@ function Game() {
           onUpdateUnit={handleUpdateUnit}
           onSetNotification={setNotification}
           getHexesInLine={getHexesInLine}
+          onFireMainGun={handleFireMainGun}
+          onSetTargetingMessage={setNotification}
         />
       </div>
     </div>

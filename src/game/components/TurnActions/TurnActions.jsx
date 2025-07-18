@@ -6,7 +6,7 @@ import DiceDisplay from '../DiceDisplay/DiceDisplay';
 
 import { getDistance } from '../../logic/hexUtils';
 
-function TurnActions({ onManeuver, onAttack, onStartTurnLogic, onCommanderDecision, shermanUnit, currentScenario, onMoveSherman, onReverseSherman, onTurnSherman, onUpdateUnit, onSetNotification, getHexesInLine }) {
+function TurnActions({ onManeuver, onAttack, onStartTurnLogic, onCommanderDecision, shermanUnit, currentScenario, onMoveSherman, onReverseSherman, onTurnSherman, onUpdateUnit, onSetNotification, getHexesInLine, onFireMainGun, onSetTargetingMessage }) {
   // State to manage the current phase of the player's turn
   // 'initial' -> 'commander_decision' -> 'sherman_operations'
   const [currentPhase, setCurrentPhase] = useState('initial');
@@ -23,6 +23,7 @@ function TurnActions({ onManeuver, onAttack, onStartTurnLogic, onCommanderDecisi
   const [showDoublesAttackOptions, setShowDoublesAttackOptions] = useState(false);
   const [currentActionType, setCurrentActionType] = useState(null); // 'maneuver' or 'attack'
   const [showMiscellaneousButton, setShowMiscellaneousButton] = useState(false);
+  const [targetingMessage, setTargetingMessage] = useState(null);
 
   useEffect(() => {
     if (diceResults.length > 0 && diceResults.length === expendedDice.length) {
@@ -44,6 +45,10 @@ function TurnActions({ onManeuver, onAttack, onStartTurnLogic, onCommanderDecisi
       setShowMiscellaneousButton(true);
     }
   }, [maneuverExpended, attackExpended]);
+
+  useEffect(() => {
+    onSetTargetingMessage(targetingMessage);
+  }, [targetingMessage, onSetTargetingMessage]);
 
   
 
@@ -410,33 +415,7 @@ function TurnActions({ onManeuver, onAttack, onStartTurnLogic, onCommanderDecisi
               {selectedAction === "TURN" && !showTurnButtons && <button className={`${styles.actionButton} ${styles.maneuverActionButton}`} onClick={() => handleActionClick(onTurnSherman)}>TURN</button>}
               {selectedAction === "LOAD" && <button className={`${styles.actionButton} ${styles.attackActionButton}`} onClick={() => handleActionClick(() => onUpdateUnit(shermanUnit.id, { mainGunStatus: 'loaded' }))}>LOAD</button>}
               {selectedAction === "FIRE MACHINE GUN" && <button className={`${styles.actionButton} ${styles.attackActionButton}`} onClick={() => handleActionClick(() => console.log("FIRE MACHINE GUN"))}>FIRE MACHINE GUN</button>}
-                            {selectedAction === "FIRE MAIN GUN" && <button className={`${styles.actionButton} ${styles.attackActionButton}`} onClick={() => handleActionClick(() => {
-                if (shermanUnit.turretDamaged === "Yes") {
-                  onSetNotification("Main gun is damaged, can't fire until repaired!");
-                  return false; // Indicate action failed
-                }
-                if (shermanUnit.mainGunStatus !== 'loaded') {
-                  onSetNotification("Main gun unloaded. Can't fire.");
-                  return false; // Indicate action failed
-                }
-
-                const lineOfFire = getHexesInLine(shermanUnit.currentHex, shermanUnit.rotation, currentScenario.map.hexes);
-                const enemyInLineOfFire = currentScenario.units.find(unit => 
-                  unit.faction === 'axis' && 
-                  lineOfFire.some(hex => hex.q === unit.currentHex.q && hex.r === unit.currentHex.r)
-                );
-
-                if (!enemyInLineOfFire) {
-                  onSetNotification("There is nothing in front of you to fire at");
-                  return false; // Indicate action failed
-                }
-
-                const distance = getDistance(shermanUnit.currentHex, enemyInLineOfFire.currentHex);
-                console.log(`Distance to target: ${distance} hexes`);
-
-                console.log("Fire Main Gun at", enemyInLineOfFire);
-                return true; // Indicate action succeeded
-              })}>FIRE MAIN GUN</button>}
+                            {selectedAction === "FIRE MAIN GUN" && <button className={`${styles.actionButton} ${styles.attackActionButton}`} onClick={() => handleActionClick(onFireMainGun)}>FIRE MAIN GUN</button>}
             </>
           )}
 
@@ -468,33 +447,7 @@ function TurnActions({ onManeuver, onAttack, onStartTurnLogic, onCommanderDecisi
               <button className={`${styles.actionButton} ${styles.attackActionButton}`} onClick={() => handleActionClick(() => onUpdateUnit(shermanUnit.id, { mainGunStatus: 'loaded' }))}>
                 LOAD
               </button>
-              <button className={`${styles.actionButton} ${styles.attackActionButton}`} onClick={() => handleActionClick(() => {
-                if (shermanUnit.turretDamaged === "Yes") {
-                  onSetNotification("Main gun is damaged, can't fire until repaired!");
-                  return false;
-                }
-                if (shermanUnit.mainGunStatus !== 'loaded') {
-                  onSetNotification("Main gun unloaded. Can't fire.");
-                  return false;
-                }
-
-                const lineOfFire = getHexesInLine(shermanUnit.currentHex, shermanUnit.rotation, currentScenario.map.hexes);
-                const enemyInLineOfFire = currentScenario.units.find(unit => 
-                  unit.faction === 'axis' && 
-                  lineOfFire.some(hex => hex.q === unit.currentHex.q && hex.r === unit.currentHex.r)
-                );
-
-                if (!enemyInLineOfFire) {
-                  onSetNotification("There is nothing in front of you to fire at");
-                  return false;
-                }
-
-                const distance = getDistance(shermanUnit.currentHex, enemyInLineOfFire.currentHex);
-                console.log(`Distance to target: ${distance} hexes`);
-
-                console.log("Fire Main Gun at", enemyInLineOfFire);
-                return true;
-              })}>
+              <button className={`${styles.actionButton} ${styles.attackActionButton}`} onClick={() => handleActionClick(onFireMainGun)}>
                 MAIN GUN
               </button>
               <button className={`${styles.actionButton} ${styles.attackActionButton}`} onClick={() => { console.log("FIRE MACHINE GUN"); return true; }}>
@@ -523,6 +476,7 @@ function TurnActions({ onManeuver, onAttack, onStartTurnLogic, onCommanderDecisi
               Miscellaneous
             </button>
           )}
+          {targetingMessage && <p className={styles.targetingMessage}>{targetingMessage}</p>}
           {/* Add an "End Turn" button here later */}
         </>
       )}

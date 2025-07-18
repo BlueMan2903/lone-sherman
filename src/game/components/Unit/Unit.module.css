@@ -17,3 +17,8 @@
   transition: transform 0.3s ease-out;
   transform: rotate(var(--rotation-angle, 0deg)); /* Use custom property */
 }
+
+.unitContainer.targeting {
+  pointer-events: auto; /* Enable clicks */
+  cursor: crosshair;
+}

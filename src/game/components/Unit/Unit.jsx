@@ -7,7 +7,7 @@ import styles from './Unit.module.css';
 // Adjust the path if your assets/images/units structure is different.
 const unitSprites = import.meta.glob('/src/assets/images/units/*.png', { eager: true });
 
-function Unit({ unitData, pixelX, pixelY, hexHeight }) {
+function Unit({ unitData, pixelX, pixelY, hexHeight, onClick, isTargetingMode }) {
   // Destructure 'rotation' from unitData
   const { sprite, rotation } = unitData;
   const imageRef = useRef(null);
@@ -63,8 +63,15 @@ function Unit({ unitData, pixelX, pixelY, hexHeight }) {
     transformOrigin: 'center center',
   };
 
+  const isEnemy = unitData.faction === 'axis';
+  const canBeTargeted = isTargetingMode && isEnemy;
+
   return (
-    <div className={styles.unitContainer} style={containerStyle}>
+    <div
+      className={`${styles.unitContainer} ${canBeTargeted ? styles.targeting : ''}`}
+      style={containerStyle}
+      onClick={canBeTargeted ? onClick : undefined}
+    >
       <img
         ref={imageRef}
         src={spriteSrc}

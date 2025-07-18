@@ -100,3 +100,66 @@ export function getDistance(hexA, hexB) {
   const ds = sA - sB;
   return (Math.abs(dq) + Math.abs(dr) + Math.abs(ds)) / 2;
 }
+
+export function hasClearPath(startHex, endHex, allHexes) {
+  // Determine the axial direction from startHex to endHex
+  const dq = endHex.q - startHex.q;
+  const dr = endHex.r - startHex.r;
+
+  let directionIndex = -1;
+  if (dq === 0 && dr > 0) directionIndex = 0; // N
+  else if (dq > 0 && dr === 0) directionIndex = 1; // NE
+  else if (dq > 0 && dr < 0 && dq === -dr) directionIndex = 2; // SE
+  else if (dq === 0 && dr < 0) directionIndex = 3; // S
+  else if (dq < 0 && dr === 0) directionIndex = 4; // SW
+  else if (dq < 0 && dr > 0 && dq === -dr) directionIndex = 5; // NW
+
+  if (directionIndex === -1) {
+    return { blocked: true, blockingTerrain: 'Not a straight axial line' };
+  }
+
+  const line = getHexesInLine(startHex, directionIndex * 60, allHexes);
+
+  // Find the index of the endHex in the line
+  const endIndex = line.findIndex(hex => hex.q === endHex.q && hex.r === endHex.r);
+
+  // If endHex is not found in the line, or it's the start hex itself, it's not a valid straight line target
+  if (endIndex === -1 || endIndex === 0) {
+    return { blocked: true, blockingTerrain: 'Not a straight axial line' };
+  }
+
+  for (let i = 1; i < endIndex; i++) { // Iterate only through intervening hexes
+    const hexOnLine = line[i];
+    const hexData = allHexes.find(h => h.q === hexOnLine.q && h.r === hexOnLine.r);
+    if (hexData) {
+      if (hexData.terrain === 'forest' || hexData.terrain.includes('buildings')) {
+        return { blocked: true, blockingTerrain: hexData.terrain };
+      }
+    }
+  }
+  return { blocked: false };
+}
+
+export function getFiringArcHexes(shermanHex, shermanRotation, allHexes) {
+  const firingArcHexes = new Set();
+
+  // Get hexes in line for the current facing
+  const currentFacingHexes = getHexesInLine(shermanHex, shermanRotation, allHexes);
+  currentFacingHexes.forEach(hex => firingArcHexes.add(`${hex.q},${hex.r}`));
+
+  // Get hexes in line for the left adjacent facing
+  const leftRotation = (shermanRotation - 60 + 360) % 360;
+  const leftFacingHexes = getHexesInLine(shermanHex, leftRotation, allHexes);
+  leftFacingHexes.forEach(hex => firingArcHexes.add(`${hex.q},${hex.r}`));
+
+  // Get hexes in line for the right adjacent facing
+  const rightRotation = (shermanRotation + 60) % 360;
+  const rightFacingHexes = getHexesInLine(shermanHex, rightRotation, allHexes);
+  rightFacingHexes.forEach(hex => firingArcHexes.add(`${hex.q},${hex.r}`));
+
+  // Convert Set back to array of hex objects
+  return Array.from(firingArcHexes).map(coord => {
+    const [q, r] = coord.split(',').map(Number);
+    return { q, r };
+  });
+}

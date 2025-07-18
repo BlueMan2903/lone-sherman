@@ -91,3 +91,12 @@ export function getHexesInLine(startHex, rotationDegrees, allHexes) {
 
 // Export these for use in Hex.jsx to set element dimensions
 export { HEX_WIDTH, HEX_HEIGHT };
+
+export function getDistance(hexA, hexB) {
+  const dq = hexA.q - hexB.q;
+  const dr = hexA.r - hexB.r;
+  const sA = -hexA.q - hexA.r;
+  const sB = -hexB.q - hexB.r;
+  const ds = sA - sB;
+  return (Math.abs(dq) + Math.abs(dr) + Math.abs(ds)) / 2;
+}

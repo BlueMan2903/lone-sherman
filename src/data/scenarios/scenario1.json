@@ -59,7 +59,7 @@
         "assistantDriver": "alive"
       },
       "mainGunStatus": "unloaded",
-      "turretDamaged": "Yes",
+      "turretDamaged": "No",
       "immobilized": "No",
       "fireLevel": 0
     }
@@ -71,6 +71,15 @@
       "name": "Panzer IV",
       "sprite": "panzer4.png",
       "faction": "axis",
+      "hull_down": false,
+      "size": 4,
+      "armor_score": {
+        "front": 6,
+        "front_side": 5,
+        "rear_side": 4,
+        "rear": 4
+      },
+      "armor_pen": 1,
       "destroyed": false
     }
   ],

@@ -4,6 +4,8 @@ import styles from './TurnActions.module.css';
 import diceRollingSound from '../../../assets/sounds/dice-rolling.mp3';
 import DiceDisplay from '../DiceDisplay/DiceDisplay';
 
+import { getDistance } from '../../logic/hexUtils';
+
 function TurnActions({ onManeuver, onAttack, onStartTurnLogic, onCommanderDecision, shermanUnit, currentScenario, onMoveSherman, onReverseSherman, onTurnSherman, onUpdateUnit, onSetNotification, getHexesInLine }) {
   // State to manage the current phase of the player's turn
   // 'initial' -> 'commander_decision' -> 'sherman_operations'
@@ -429,6 +431,9 @@ function TurnActions({ onManeuver, onAttack, onStartTurnLogic, onCommanderDecisi
                   return false; // Indicate action failed
                 }
 
+                const distance = getDistance(shermanUnit.currentHex, enemyInLineOfFire.currentHex);
+                console.log(`Distance to target: ${distance} hexes`);
+
                 console.log("Fire Main Gun at", enemyInLineOfFire);
                 return true; // Indicate action succeeded
               })}>FIRE MAIN GUN</button>}
@@ -483,6 +488,9 @@ function TurnActions({ onManeuver, onAttack, onStartTurnLogic, onCommanderDecisi
                   onSetNotification("There is nothing in front of you to fire at");
                   return false;
                 }
+
+                const distance = getDistance(shermanUnit.currentHex, enemyInLineOfFire.currentHex);
+                console.log(`Distance to target: ${distance} hexes`);
 
                 console.log("Fire Main Gun at", enemyInLineOfFire);
                 return true;

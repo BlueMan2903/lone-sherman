@@ -59,7 +59,7 @@
         "assistantDriver": "alive"
       },
       "mainGunStatus": "unloaded",
-      "turretDamaged": "No",
+      "turretDamaged": "Yes",
       "immobilized": "No",
       "fireLevel": 0
     }

@@ -409,6 +409,10 @@ function TurnActions({ onManeuver, onAttack, onStartTurnLogic, onCommanderDecisi
               {selectedAction === "LOAD" && <button className={`${styles.actionButton} ${styles.attackActionButton}`} onClick={() => handleActionClick(() => onUpdateUnit(shermanUnit.id, { mainGunStatus: 'loaded' }))}>LOAD</button>}
               {selectedAction === "FIRE MACHINE GUN" && <button className={`${styles.actionButton} ${styles.attackActionButton}`} onClick={() => handleActionClick(() => console.log("FIRE MACHINE GUN"))}>FIRE MACHINE GUN</button>}
                             {selectedAction === "FIRE MAIN GUN" && <button className={`${styles.actionButton} ${styles.attackActionButton}`} onClick={() => handleActionClick(() => {
+                if (shermanUnit.turretDamaged === "Yes") {
+                  onSetNotification("Main gun is damaged, can't fire until repaired!");
+                  return false; // Indicate action failed
+                }
                 if (shermanUnit.mainGunStatus !== 'loaded') {
                   onSetNotification("Main gun unloaded. Can't fire.");
                   return false; // Indicate action failed
@@ -460,6 +464,10 @@ function TurnActions({ onManeuver, onAttack, onStartTurnLogic, onCommanderDecisi
                 LOAD
               </button>
               <button className={`${styles.actionButton} ${styles.attackActionButton}`} onClick={() => handleActionClick(() => {
+                if (shermanUnit.turretDamaged === "Yes") {
+                  onSetNotification("Main gun is damaged, can't fire until repaired!");
+                  return false;
+                }
                 if (shermanUnit.mainGunStatus !== 'loaded') {
                   onSetNotification("Main gun unloaded. Can't fire.");
                   return false;

@@ -5,6 +5,7 @@ import TankStatusDisplay from './components/TankStatusDisplay/TankStatusDisplay'
 import TurnActions from './components/TurnActions/TurnActions';
 import Notification from './components/Notification/Notification'; // Import Notification
 import { getNeighborHex, getHexesInLine, hasClearPath, getDistance, getFiringArcHexes } from './logic/hexUtils';
+import { calculateToHitNumber, roll2D6 } from './logic/combatUtils';
 import scenario1Data from '../data/scenarios/scenario1.json';
 import styles from './Game.module.css';
 
@@ -23,6 +24,7 @@ function Game() {
   const [turnNumber, setTurnNumber] = useState(1);
   const [notification, setNotification] = useState(null); // State for notification message
   const [isTargetingMode, setIsTargetingMode] = useState(false);
+  const [buttonMessage, setButtonMessage] = useState(null);
 
   const initializeScenarioUnits = useCallback(() => {
     const scenario = JSON.parse(JSON.stringify(scenario1Data));
@@ -111,11 +113,12 @@ function Game() {
 
     if (shermanUnit.mainGunStatus !== 'loaded') {
       setNotification("Main gun unloaded. Can't fire.");
+      setButtonMessage(null); // Clear message if not loaded
       return;
     }
 
     setIsTargetingMode(true);
-    setNotification("Select an enemy unit to fire upon.");
+    setButtonMessage("Select an enemy unit to fire upon.");
   }, [currentScenario]);
 
   const onUnitClick = useCallback((unit) => {
@@ -136,15 +139,23 @@ function Game() {
     const losCheck = hasClearPath(shermanUnit.currentHex, unit.currentHex, currentScenario.map.hexes);
 
     if (losCheck.blocked) {
-      setNotification(`Line of sight blocked by ${losCheck.blockingTerrain}.`);
+      setButtonMessage(`Line of sight blocked by ${losCheck.blockingTerrain}.`);
     } else {
-      const distance = getDistance(shermanUnit.currentHex, unit.currentHex);
-      console.log(`Distance to target: ${distance} hexes`);
-      setNotification(`Distance to target: ${distance} hexes`);
+      const { toHit, breakdown } = calculateToHitNumber(shermanUnit, unit, currentScenario.map.hexes);
+      const diceRoll = roll2D6();
+      const isHit = diceRoll.total >= toHit;
+
+      let hitMessage = `To-Hit: ${toHit} (Roll: ${diceRoll.total} [${diceRoll.rolls.join('+')}]) - ${isHit ? 'HIT!' : 'MISS!'}`;
+      hitMessage += `\nBreakdown: Dist(${breakdown.distance}), Size(${breakdown.size}), Build(${breakdown.building}), Smoke(${breakdown.smoke}), Hull(${breakdown.hullDown}), Arc(${breakdown.southernArc})`;
+
+      console.log(hitMessage);
+
+      // Set main gun status to unloaded after a successful shot
+      handleUpdateUnit(shermanUnit.id, { mainGunStatus: 'unloaded' });
     }
 
     setIsTargetingMode(false);
-    setNotification(""); // Clear the message
+    setButtonMessage(""); // Clear the message
   }, [isTargetingMode, currentScenario]);
 
   const handleMoveSherman = useCallback(() => {
@@ -318,6 +329,7 @@ function Game() {
             isTargetingMode={isTargetingMode}
           />
         </div>
+        {isTargetingMode && buttonMessage && <p className={styles.buttonMessage}>{buttonMessage}</p>}
       </div>
 
       {/* Right Section: Sidebar */}
@@ -337,7 +349,7 @@ function Game() {
           onSetNotification={setNotification}
           getHexesInLine={getHexesInLine}
           onFireMainGun={handleFireMainGun}
-          onSetTargetingMessage={setNotification}
+          targetingMessage={buttonMessage}
         />
       </div>
     </div>

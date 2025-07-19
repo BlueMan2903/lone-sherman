@@ -61,7 +61,15 @@
       "mainGunStatus": "unloaded",
       "turretDamaged": "No",
       "immobilized": "No",
-      "fireLevel": 0
+      "fireLevel": 0,
+      "size": 4,
+      "armor_score": {
+        "front": 6,
+        "front_side": 5,
+        "rear_side": 4,
+        "rear": 4
+      },
+      "armor_pen": 1
     }
   ],
   "unitTemplates": [ 

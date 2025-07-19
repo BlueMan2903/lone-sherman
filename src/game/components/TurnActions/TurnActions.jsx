@@ -1,12 +1,12 @@
 // src/game/components/TurnActions/TurnActions.jsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import styles from './TurnActions.module.css';
 import diceRollingSound from '../../../assets/sounds/dice-rolling.mp3';
 import DiceDisplay from '../DiceDisplay/DiceDisplay';
 
 import { getDistance } from '../../logic/hexUtils';
 
-function TurnActions({ onManeuver, onAttack, onStartTurnLogic, onCommanderDecision, shermanUnit, currentScenario, onMoveSherman, onReverseSherman, onTurnSherman, onUpdateUnit, onSetNotification, getHexesInLine, onFireMainGun, onSetTargetingMessage }) {
+function TurnActions({ onManeuver, onAttack, onStartTurnLogic, onCommanderDecision, shermanUnit, currentScenario, onMoveSherman, onReverseSherman, onTurnSherman, onUpdateUnit, onSetNotification, getHexesInLine, onFireMainGun, targetingMessage }) {
   // State to manage the current phase of the player's turn
   // 'initial' -> 'commander_decision' -> 'sherman_operations'
   const [currentPhase, setCurrentPhase] = useState('initial');
@@ -23,7 +23,6 @@ function TurnActions({ onManeuver, onAttack, onStartTurnLogic, onCommanderDecisi
   const [showDoublesAttackOptions, setShowDoublesAttackOptions] = useState(false);
   const [currentActionType, setCurrentActionType] = useState(null); // 'maneuver' or 'attack'
   const [showMiscellaneousButton, setShowMiscellaneousButton] = useState(false);
-  const [targetingMessage, setTargetingMessage] = useState(null);
 
   useEffect(() => {
     if (diceResults.length > 0 && diceResults.length === expendedDice.length) {
@@ -45,10 +44,6 @@ function TurnActions({ onManeuver, onAttack, onStartTurnLogic, onCommanderDecisi
       setShowMiscellaneousButton(true);
     }
   }, [maneuverExpended, attackExpended]);
-
-  useEffect(() => {
-    onSetTargetingMessage(targetingMessage);
-  }, [targetingMessage, onSetTargetingMessage]);
 
   
 
@@ -348,6 +343,20 @@ function TurnActions({ onManeuver, onAttack, onStartTurnLogic, onCommanderDecisi
     setShowTurnButtons(false);
   };
 
+  const expendCurrentDie = useCallback(() => {
+    if (isDoublesActive) {
+      setExpendedDice(prev => [...prev, ...selectedDiceForDoubles]);
+      setSelectedDiceForDoubles([]);
+      setIsDoublesActive(false);
+    } else if (selectedDieIndex !== null) {
+      setExpendedDice(prev => [...prev, selectedDieIndex]);
+    }
+    setSelectedAction(null);
+    setSelectedDieIndex(null);
+    setShowDoublesManeuverOptions(false);
+    setShowTurnButtons(false);
+  }, [selectedDieIndex, selectedDiceForDoubles, isDoublesActive]);
+
   return (
     <div className={styles.actionButtonsContainer}>
       {currentPhase === 'initial' && (
@@ -476,7 +485,6 @@ function TurnActions({ onManeuver, onAttack, onStartTurnLogic, onCommanderDecisi
               Miscellaneous
             </button>
           )}
-          {targetingMessage && <p className={styles.targetingMessage}>{targetingMessage}</p>}
           {/* Add an "End Turn" button here later */}
         </>
       )}

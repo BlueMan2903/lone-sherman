@@ -5,7 +5,7 @@ import TankStatusDisplay from './components/TankStatusDisplay/TankStatusDisplay'
 import TurnActions from './components/TurnActions/TurnActions';
 import Notification from './components/Notification/Notification'; // Import Notification
 import { getNeighborHex, getHexesInLine, hasClearPath, getDistance, getFiringArcHexes } from './logic/hexUtils';
-import { calculateToHitNumber, roll2D6 } from './logic/combatUtils';
+import { calculateToHitNumber, roll2D6, calculateDamage } from './logic/combatUtils';
 import scenario1Data from '../data/scenarios/scenario1.json';
 import styles from './Game.module.css';
 
@@ -149,6 +149,11 @@ function Game() {
       hitMessage += `\nBreakdown: Dist(${breakdown.distance}), Size(${breakdown.size}), Build(${breakdown.building}), Smoke(${breakdown.smoke}), Hull(${breakdown.hullDown}), Arc(${breakdown.southernArc})`;
 
       console.log(hitMessage);
+
+      if (isHit) {
+        const damageResult = calculateDamage(shermanUnit, unit);
+        console.log(`Penetration Roll: ${damageResult.roll} vs. Armor (${damageResult.armorSide}): ${damageResult.armorValue}. Needed: ${damageResult.scoreNeeded}. Result: ${damageResult.penetrated ? 'PENETRATION' : 'BOUNCE'}`);
+      }
 
       // Set main gun status to unloaded after a successful shot
       handleUpdateUnit(shermanUnit.id, { mainGunStatus: 'unloaded' });

@@ -163,3 +163,23 @@ export function getFiringArcHexes(shermanHex, shermanRotation, allHexes) {
     return { q, r };
   });
 }
+
+export function getAngleOfAttack(attackerHex, defenderHex) {
+  const dq = defenderHex.q - attackerHex.q;
+  const dr = defenderHex.r - attackerHex.r;
+
+  if (dq === 0 && dr > 0) return ROTATION_N;       // North
+  if (dq > 0 && dr >= 0 && dr < dq) return ROTATION_NE;   // North-East
+  if (dq > 0 && dr < 0 && -dr < dq) return ROTATION_SE;   // South-East
+  if (dq === 0 && dr < 0) return ROTATION_S;       // South
+  if (dq < 0 && dr <= 0 && -dr > dq) return ROTATION_SW;  // South-West
+  if (dq < 0 && dr > 0 && dr > -dq) return ROTATION_NW;   // North-West
+
+  // Fallback for edge cases or if logic needs refinement
+  // This part of the logic is complex, might need adjustments based on hex grid math specifics
+  if (dq > 0 && dr === 0) return ROTATION_NE; // Simplified case for due NE
+  if (dq < 0 && dr === 0) return ROTATION_SW; // Simplified case for due SW
+
+
+  return 0; // Default or error case
+}

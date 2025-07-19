@@ -63,7 +63,7 @@
       "immobilized": "No",
       "fireLevel": 0,
       "size": 4,
-      "armor_score": {
+      "armor_values": {
         "front": 6,
         "front_side": 5,
         "rear_side": 4,
@@ -81,7 +81,7 @@
       "faction": "axis",
       "hull_down": false,
       "size": 4,
-      "armor_score": {
+      "armor_values": {
         "front": 6,
         "front_side": 5,
         "rear_side": 4,

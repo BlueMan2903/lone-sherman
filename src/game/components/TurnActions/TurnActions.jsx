@@ -1,7 +1,9 @@
 // src/game/components/TurnActions/TurnActions.jsx
 import React, { useState, useEffect, useCallback } from 'react';
 import styles from './TurnActions.module.css';
+import { playSound } from '../../logic/audioManager';
 import diceRollingSound from '../../../assets/sounds/dice-rolling.mp3';
+import tankReloadSound from '../../../assets/sounds/tank-reload.mp3';
 import DiceDisplay from '../DiceDisplay/DiceDisplay';
 
 import { getDistance } from '../../logic/hexUtils';
@@ -243,8 +245,7 @@ function TurnActions({ onManeuver, onAttack, onStartTurnLogic, onCommanderDecisi
     setCurrentActionType('maneuver');
 
     // Play dice rolling sound
-    const audio = new Audio(diceRollingSound);
-    audio.play();
+    playSound(diceRollingSound, 0.4);
 
     const { totalDice } = calculateManeuverDice();
     const newDiceResults = [];
@@ -262,8 +263,7 @@ function TurnActions({ onManeuver, onAttack, onStartTurnLogic, onCommanderDecisi
     setCurrentActionType('attack');
 
     // Play dice rolling sound
-    const audio = new Audio(diceRollingSound);
-    audio.play();
+    playSound(diceRollingSound, 0.4);
 
     const { totalDice } = calculateAttackDice();
     const newDiceResults = [];
@@ -275,6 +275,16 @@ function TurnActions({ onManeuver, onAttack, onStartTurnLogic, onCommanderDecisi
     if (onAttack) {
       onAttack();
     }
+  };
+
+  const handleLoadAction = () => {
+    if (shermanUnit.mainGunStatus === 'loaded') {
+      onSetNotification("Main Gun is already loaded");
+      return false; // Action failed, don't expend die
+    }
+    // Play the sound on successful load
+    playSound(tankReloadSound, 0.4);
+    return onUpdateUnit(shermanUnit.id, { mainGunStatus: 'loaded' });
   };
 
   const handleActionClick = (action, isDoublesButton = false) => {
@@ -295,18 +305,14 @@ function TurnActions({ onManeuver, onAttack, onStartTurnLogic, onCommanderDecisi
       if (action === onTurnSherman) {
         setShowTurnButtons(true);
         setShowDoublesManeuverOptions(false); // Hide doubles maneuver options
+      } else if (action === onFireMainGun) {
+        // Special case for firing: pass the callback, don't expect immediate success
+        onFireMainGun(expendCurrentDie);
       } else {
         actionSuccessful = action();
         if (actionSuccessful) {
-          setExpendedDice([...expendedDice, ...selectedDiceForDoubles]);
-          setSelectedDiceForDoubles([]);
-          setIsDoublesActive(false);
-          setSelectedAction(null);
-          setSelectedDieIndex(null);
-          setShowDoublesManeuverOptions(false); // Reset after action
+          expendCurrentDie();
         } else {
-          // If the action failed, hide the maneuver options but keep doubles active
-          // so the user can try another doubles action.
           setShowDoublesManeuverOptions(false);
         }
       }
@@ -314,12 +320,13 @@ function TurnActions({ onManeuver, onAttack, onStartTurnLogic, onCommanderDecisi
       // For single die actions
       if (action === onTurnSherman) {
         setShowTurnButtons(true);
+      } else if (action === onFireMainGun) {
+        // Special case for firing: pass the callback
+        onFireMainGun(expendCurrentDie);
       } else {
         actionSuccessful = action(); // e.g., onMoveSherman()
         if (actionSuccessful) {
-          setExpendedDice([...expendedDice, selectedDieIndex]);
-          setSelectedAction(null);
-          setSelectedDieIndex(null);
+          expendCurrentDie();
         } else {
           // If the action was not successful (e.g., illegal move), reset the selection
           setSelectedAction(null);
@@ -422,7 +429,7 @@ function TurnActions({ onManeuver, onAttack, onStartTurnLogic, onCommanderDecisi
               {selectedAction === "MOVE" && <button className={`${styles.actionButton} ${styles.maneuverActionButton}`} onClick={() => handleActionClick(onMoveSherman)}>MOVE</button>}
               {selectedAction === "REVERSE" && <button className={`${styles.actionButton} ${styles.maneuverActionButton}`} onClick={() => handleActionClick(onReverseSherman)}>REVERSE</button>}
               {selectedAction === "TURN" && !showTurnButtons && <button className={`${styles.actionButton} ${styles.maneuverActionButton}`} onClick={() => handleActionClick(onTurnSherman)}>TURN</button>}
-              {selectedAction === "LOAD" && <button className={`${styles.actionButton} ${styles.attackActionButton}`} onClick={() => handleActionClick(() => onUpdateUnit(shermanUnit.id, { mainGunStatus: 'loaded' }))}>LOAD</button>}
+              {selectedAction === "LOAD" && <button className={`${styles.actionButton} ${styles.attackActionButton}`} onClick={() => handleActionClick(handleLoadAction)}>LOAD</button>}
               {selectedAction === "FIRE MACHINE GUN" && <button className={`${styles.actionButton} ${styles.attackActionButton}`} onClick={() => handleActionClick(() => console.log("FIRE MACHINE GUN"))}>FIRE MACHINE GUN</button>}
                             {selectedAction === "FIRE MAIN GUN" && <button className={`${styles.actionButton} ${styles.attackActionButton}`} onClick={() => handleActionClick(onFireMainGun)}>FIRE MAIN GUN</button>}
             </>
@@ -453,7 +460,7 @@ function TurnActions({ onManeuver, onAttack, onStartTurnLogic, onCommanderDecisi
           {/* Doubles Attack Options */}
           {isDoublesActive && showDoublesAttackOptions && (
             <div className={styles.doublesAttackOptions}>
-              <button className={`${styles.actionButton} ${styles.attackActionButton}`} onClick={() => handleActionClick(() => onUpdateUnit(shermanUnit.id, { mainGunStatus: 'loaded' }))}>
+              <button className={`${styles.actionButton} ${styles.attackActionButton}`} onClick={() => handleActionClick(handleLoadAction)}>
                 LOAD
               </button>
               <button className={`${styles.actionButton} ${styles.attackActionButton}`} onClick={() => handleActionClick(onFireMainGun)}>

@@ -4,6 +4,10 @@ import HexGrid from './components/HexGrid/HexGrid';
 import TankStatusDisplay from './components/TankStatusDisplay/TankStatusDisplay';
 import TurnActions from './components/TurnActions/TurnActions';
 import Notification from './components/Notification/Notification'; // Import Notification
+import { playSound } from './logic/audioManager';
+import tankMoveSound from '../assets/sounds/tank-move-1.mp3'; // Import tank move sound
+import tankShotSound from '../assets/sounds/tank-shot-1.wav'; // Import tank shot sound
+import shellDeflectedSound from '../assets/sounds/shell-deflected.mp3'; // Import shell deflected sound
 import { getNeighborHex, getHexesInLine, hasClearPath, getDistance, getFiringArcHexes } from './logic/hexUtils';
 import { calculateToHitNumber, roll2D6, calculateDamage } from './logic/combatUtils';
 import scenario1Data from '../data/scenarios/scenario1.json';
@@ -25,6 +29,7 @@ function Game() {
   const [notification, setNotification] = useState(null); // State for notification message
   const [isTargetingMode, setIsTargetingMode] = useState(false);
   const [buttonMessage, setButtonMessage] = useState(null);
+  const [onAttackComplete, setOnAttackComplete] = useState(null);
 
   const initializeScenarioUnits = useCallback(() => {
     const scenario = JSON.parse(JSON.stringify(scenario1Data));
@@ -103,7 +108,7 @@ function Game() {
     console.log("Attack action initiated from Game component!");
   };
 
-  const handleFireMainGun = useCallback(() => {
+  const handleFireMainGun = useCallback((onComplete) => { // Accept a callback
     const shermanUnit = currentScenario.units.find(u => u.id.includes("sherman"));
 
     if (shermanUnit.turretDamaged === "Yes") {
@@ -119,6 +124,7 @@ function Game() {
 
     setIsTargetingMode(true);
     setButtonMessage("Select an enemy unit to fire upon.");
+    setOnAttackComplete(() => onComplete); // Store the callback
   }, [currentScenario]);
 
   const onUnitClick = useCallback((unit) => {
@@ -127,20 +133,25 @@ function Game() {
     const shermanUnit = currentScenario.units.find(u => u.id.includes("sherman"));
     
     // Check if target is in firing arc
-    const firingArcHexes = getFiringArcHexes(shermanUnit.currentHex, shermanUnit.rotation, currentScenario.map.hexes);
+    const firingArcHexes = getFiringArcHexes(shermanUnit.currentHex, currentScenario.map.hexes);
     const targetInFiringArc = firingArcHexes.some(hex => hex.q === unit.currentHex.q && hex.r === unit.currentHex.r);
 
     if (!targetInFiringArc) {
-      setNotification("Invalid target: not on a straight line");
+      setNotification("Invalid target, not on a straight line from your current hex");
       setIsTargetingMode(false);
-      return;
+      return; // DO NOT EXPEND DIE
     }
 
     const losCheck = hasClearPath(shermanUnit.currentHex, unit.currentHex, currentScenario.map.hexes);
 
     if (losCheck.blocked) {
-      setButtonMessage(`Line of sight blocked by ${losCheck.blockingTerrain}.`);
+      setNotification(`Invalid target, line of sight obstructed by ${losCheck.blockingTerrain}.`);
+      setIsTargetingMode(false);
+      return; // DO NOT EXPEND DIE
     } else {
+      // Play tank shot sound
+      playSound(tankShotSound, 0.5); // Adjust volume as needed
+
       const { toHit, breakdown } = calculateToHitNumber(shermanUnit, unit, currentScenario.map.hexes);
       const diceRoll = roll2D6();
       const isHit = diceRoll.total >= toHit;
@@ -153,15 +164,25 @@ function Game() {
       if (isHit) {
         const damageResult = calculateDamage(shermanUnit, unit);
         console.log(`Penetration Roll: ${damageResult.roll} vs. Armor (${damageResult.armorSide}): ${damageResult.armorValue}. Needed: ${damageResult.scoreNeeded}. Result: ${damageResult.penetrated ? 'PENETRATION' : 'BOUNCE'}`);
+        if (!damageResult.penetrated) {
+          setTimeout(() => {
+            playSound(shellDeflectedSound, 0.5); // Play deflected sound on bounce with a delay
+          }, 1000); // 1 second delay
+        }
       }
 
       // Set main gun status to unloaded after a successful shot
       handleUpdateUnit(shermanUnit.id, { mainGunStatus: 'unloaded' });
     }
 
+    if (onAttackComplete) {
+      onAttackComplete(); // Call the stored callback to expend the die
+    }
+
     setIsTargetingMode(false);
     setButtonMessage(""); // Clear the message
-  }, [isTargetingMode, currentScenario]);
+    setOnAttackComplete(null); // Clear the callback
+  }, [isTargetingMode, currentScenario, onAttackComplete]);
 
   const handleMoveSherman = useCallback(() => {
     let moveSuccessful = false;
@@ -190,6 +211,7 @@ function Game() {
         } else {
           sherman.currentHex = newHex;
           console.log(`Sherman moved to q:${newHex.q}, r:${newHex.r}`);
+          playSound(tankMoveSound, 0.4);
           moveSuccessful = true;
         }
       } else {
@@ -228,6 +250,7 @@ function Game() {
         } else {
           sherman.currentHex = newHex;
           console.log(`Sherman reversed to q:${newHex.q}, r:${newHex.r}`);
+          playSound(tankMoveSound, 0.4);
           moveSuccessful = true;
         }
       } else {

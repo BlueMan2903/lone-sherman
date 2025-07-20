@@ -98,7 +98,7 @@ export function calculateDamage(sherman, target) {
     }
 
     const armorValue = target.armor_values[armorSide];
-    const penetrationScoreNeeded = armorValue + sherman.armor_pen;
+    const penetrationScoreNeeded = armorValue - sherman.armor_pen;
     const penetrationRoll = roll1D6();
     const isPenetration = penetrationRoll >= penetrationScoreNeeded;
 

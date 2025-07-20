@@ -1,6 +1,6 @@
 // src/game/logic/hexUtils.js
 
-const HEX_SIZE = 50; // Distance from center to vertex (outer radius)
+const HEX_SIZE = 55; // Distance from center to vertex (outer radius)
 
 const HEX_WIDTH = HEX_SIZE * 2; // Point-to-point horizontal distance
 const HEX_HEIGHT = HEX_SIZE * Math.sqrt(3); // Flat-side to flat-side vertical distance
@@ -27,6 +27,9 @@ export function axialToPixel(q, r) {
 
   return { x, y };
 }
+
+// Export these for use in Hex.jsx to set element dimensions
+export { HEX_WIDTH, HEX_HEIGHT };
 
 // Axial directions for flat-top hexes based on N=0 degrees (clockwise rotation)
 export const ROTATION_N = 0;
@@ -65,8 +68,64 @@ export function getNeighborHex(currentHex, rotationDegrees) {
   };
 }
 
-export function getHexesInLine(startHex, rotationDegrees, allHexes) {
-  const normalizedRotation = (rotationDegrees % 360 + 360) % 360;
+export function getDistance(hexA, hexB) {
+  const dq = hexA.q - hexB.q;
+  const dr = hexA.r - hexB.r;
+  const sA = -hexA.q - hexA.r;
+  const sB = -hexB.q - hexB.r;
+  const ds = sA - sB;
+  return (Math.abs(dq) + Math.abs(dr) + Math.abs(ds)) / 2;
+}
+
+// Helper for linear interpolation
+function lerp(a, b, t) {
+  return a + (b - a) * t;
+}
+
+// Helper for hex interpolation
+function hex_lerp(a, b, t) {
+  return {
+    q: lerp(a.q, b.q, t),
+    r: lerp(a.r, b.r, t),
+    s: lerp(-a.q - a.r, -b.q - b.r, t)
+  };
+}
+
+// Helper to round floating point hex coordinates to the nearest integer hex
+function hex_round(hex) {
+  let rq = Math.round(hex.q);
+  let rr = Math.round(hex.r);
+  let rs = Math.round(-rq - rr);
+
+  let q_diff = Math.abs(rq - hex.q);
+  let r_diff = Math.abs(rr - hex.r);
+  let s_diff = Math.abs(rs - hex.s);
+
+  if (q_diff > r_diff && q_diff > s_diff) {
+    rq = -rr - rs;
+  } else if (r_diff > s_diff) {
+    rr = -rq - rs;
+  } else {
+    rs = -rq - rr;
+  }
+
+  return { q: rq, r: rr };
+}
+
+export function getHexesInLine(hexA, hexB) {
+  const N = getDistance(hexA, hexB); // Number of steps
+  const results = [];
+  // Add a small epsilon to avoid floating point issues at the end point
+  const epsilon = 1e-6;
+  for (let i = 0; i <= N; i++) {
+    const hex = hex_round(hex_lerp(hexA, hexB, (1.0 / N * i) + epsilon * (i / N)));
+    results.push(hex);
+  }
+  return results;
+}
+
+export function getHexesInAxialLine(startHex, directionDegrees, allHexes) {
+  const normalizedRotation = (directionDegrees % 360 + 360) % 360;
   const directionIndex = normalizedRotation / 60;
   const direction = AXIAL_DIRECTIONS[directionIndex];
   const lineOfHexes = [];
@@ -89,48 +148,16 @@ export function getHexesInLine(startHex, rotationDegrees, allHexes) {
   return lineOfHexes;
 }
 
-// Export these for use in Hex.jsx to set element dimensions
-export { HEX_WIDTH, HEX_HEIGHT };
-
-export function getDistance(hexA, hexB) {
-  const dq = hexA.q - hexB.q;
-  const dr = hexA.r - hexB.r;
-  const sA = -hexA.q - hexA.r;
-  const sB = -hexB.q - hexB.r;
-  const ds = sA - sB;
-  return (Math.abs(dq) + Math.abs(dr) + Math.abs(ds)) / 2;
-}
-
 export function hasClearPath(startHex, endHex, allHexes) {
-  // Determine the axial direction from startHex to endHex
-  const dq = endHex.q - startHex.q;
-  const dr = endHex.r - startHex.r;
+  const line = getHexesInLine(startHex, endHex);
 
-  let directionIndex = -1;
-  if (dq === 0 && dr > 0) directionIndex = 0; // N
-  else if (dq > 0 && dr === 0) directionIndex = 1; // NE
-  else if (dq > 0 && dr < 0 && dq === -dr) directionIndex = 2; // SE
-  else if (dq === 0 && dr < 0) directionIndex = 3; // S
-  else if (dq < 0 && dr === 0) directionIndex = 4; // SW
-  else if (dq < 0 && dr > 0 && dq === -dr) directionIndex = 5; // NW
-
-  if (directionIndex === -1) {
-    return { blocked: true, blockingTerrain: 'Not a straight axial line' };
-  }
-
-  const line = getHexesInLine(startHex, directionIndex * 60, allHexes);
-
-  // Find the index of the endHex in the line
-  const endIndex = line.findIndex(hex => hex.q === endHex.q && hex.r === endHex.r);
-
-  // If endHex is not found in the line, or it's the start hex itself, it's not a valid straight line target
-  if (endIndex === -1 || endIndex === 0) {
-    return { blocked: true, blockingTerrain: 'Not a straight axial line' };
-  }
-
-  for (let i = 1; i < endIndex; i++) { // Iterate only through intervening hexes
+  // Iterate through all hexes on the line, excluding the start and end hexes
+  for (let i = 1; i < line.length - 1; i++) {
     const hexOnLine = line[i];
     const hexData = allHexes.find(h => h.q === hexOnLine.q && h.r === hexOnLine.r);
+    
+    // If a hex on the line is not found in allHexes, it means the line goes off map
+    // or there's an issue with hex generation, but for LOS, we only care about existing hexes.
     if (hexData) {
       if (hexData.terrain === 'forest' || hexData.terrain.includes('buildings')) {
         return { blocked: true, blockingTerrain: hexData.terrain };
@@ -140,22 +167,15 @@ export function hasClearPath(startHex, endHex, allHexes) {
   return { blocked: false };
 }
 
-export function getFiringArcHexes(shermanHex, shermanRotation, allHexes) {
+export function getFiringArcHexes(shermanHex, allHexes) {
   const firingArcHexes = new Set();
 
-  // Get hexes in line for the current facing
-  const currentFacingHexes = getHexesInLine(shermanHex, shermanRotation, allHexes);
-  currentFacingHexes.forEach(hex => firingArcHexes.add(`${hex.q},${hex.r}`));
-
-  // Get hexes in line for the left adjacent facing
-  const leftRotation = (shermanRotation - 60 + 360) % 360;
-  const leftFacingHexes = getHexesInLine(shermanHex, leftRotation, allHexes);
-  leftFacingHexes.forEach(hex => firingArcHexes.add(`${hex.q},${hex.r}`));
-
-  // Get hexes in line for the right adjacent facing
-  const rightRotation = (shermanRotation + 60) % 360;
-  const rightFacingHexes = getHexesInLine(shermanHex, rightRotation, allHexes);
-  rightFacingHexes.forEach(hex => firingArcHexes.add(`${hex.q},${hex.r}`));
+  // Iterate through all 6 axial directions
+  for (let i = 0; i < AXIAL_DIRECTIONS.length; i++) {
+    const directionDegrees = i * 60;
+    const hexesInDirection = getHexesInAxialLine(shermanHex, directionDegrees, allHexes);
+    hexesInDirection.forEach(hex => firingArcHexes.add(`${hex.q},${hex.r}`));
+  }
 
   // Convert Set back to array of hex objects
   return Array.from(firingArcHexes).map(coord => {

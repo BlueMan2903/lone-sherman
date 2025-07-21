@@ -5,7 +5,6 @@ import styles from './DiceDisplay.module.css';
 const diceImages = import.meta.glob('/src/assets/images/dice/*.png', { eager: true });
 
 function DiceDisplay({ results, onDieClick, selectedIndex, expendedDice, selectedDiceForDoubles, getActionForRoll }) {
-  console.log("DiceDisplay received selectedIndex:", selectedIndex);
   if (!results || results.length === 0) {
     return null;
   }
@@ -17,7 +16,6 @@ function DiceDisplay({ results, onDieClick, selectedIndex, expendedDice, selecte
         const imgSrc = diceImages[imagePath]?.default;
         const isSelected = index === selectedIndex || selectedDiceForDoubles.includes(index);
         const isExpended = expendedDice.includes(index);
-        console.log(`Die ${roll} at index ${index}: isSelected = ${isSelected} (index === selectedIndex: ${index} === ${selectedIndex})`);
 
         if (!imgSrc) {
           console.warn(`Dice image not found for roll: ${roll}`);

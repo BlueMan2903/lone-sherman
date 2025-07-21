@@ -146,6 +146,15 @@
   background-color: #563d7c; /* Darker purple */
 }
 
+.destroyButton {
+  background-color: #dc3545; /* Red */
+  color: white;
+}
+
+.destroyButton:hover {
+  background-color: #c82333; /* Darker red */
+}
+
 .targetingMessage {
   color: var(--color-text-accent); /* Use an accent color for visibility */
   font-size: 1em;

@@ -8,7 +8,7 @@ import DiceDisplay from '../DiceDisplay/DiceDisplay';
 
 import { getDistance } from '../../logic/hexUtils';
 
-function TurnActions({ onManeuver, onAttack, onStartTurnLogic, onCommanderDecision, shermanUnit, currentScenario, onMoveSherman, onReverseSherman, onTurnSherman, onUpdateUnit, onSetNotification, getHexesInLine, onFireMainGun, targetingMessage }) {
+function TurnActions({ onManeuver, onAttack, onStartTurnLogic, onCommanderDecision, shermanUnit, currentScenario, onMoveSherman, onReverseSherman, onTurnSherman, onUpdateUnit, onSetNotification, getHexesInLine, onFireMainGun, targetingMessage, selectedTargetUnitId }) {
   // State to manage the current phase of the player's turn
   // 'initial' -> 'commander_decision' -> 'sherman_operations'
   const [currentPhase, setCurrentPhase] = useState('initial');
@@ -364,6 +364,13 @@ function TurnActions({ onManeuver, onAttack, onStartTurnLogic, onCommanderDecisi
     setShowTurnButtons(false);
   }, [selectedDieIndex, selectedDiceForDoubles, isDoublesActive]);
 
+  const handleDestroyTarget = () => {
+    if (selectedTargetUnitId && onUpdateUnit) {
+      onUpdateUnit(selectedTargetUnitId, { destroyed: true });
+      onSetNotification(`Unit ${selectedTargetUnitId} instantly destroyed!`);
+    }
+  };
+
   return (
     <div className={styles.actionButtonsContainer}>
       {currentPhase === 'initial' && (
@@ -490,6 +497,14 @@ function TurnActions({ onManeuver, onAttack, onStartTurnLogic, onCommanderDecisi
           {showMiscellaneousButton && (
             <button className={`${styles.actionButton} ${styles.miscellaneousButton}`} onClick={() => console.log("Miscellaneous button clicked!")}>
               Miscellaneous
+            </button>
+          )}
+          {selectedTargetUnitId && (
+            <button
+              className={`${styles.actionButton} ${styles.destroyButton}`}
+              onClick={handleDestroyTarget}
+            >
+              DESTROY TARGET
             </button>
           )}
           {/* Add an "End Turn" button here later */}

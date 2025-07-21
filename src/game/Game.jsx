@@ -30,6 +30,7 @@ function Game() {
   const [isTargetingMode, setIsTargetingMode] = useState(false);
   const [buttonMessage, setButtonMessage] = useState(null);
   const [onAttackComplete, setOnAttackComplete] = useState(null);
+  const [selectedTargetUnitId, setSelectedTargetUnitId] = useState(null); // New state for selected target
 
   const initializeScenarioUnits = useCallback(() => {
     const scenario = JSON.parse(JSON.stringify(scenario1Data));
@@ -47,7 +48,9 @@ function Game() {
               ...template,
               id: `${template.id}-${Math.random().toString(36).substr(2, 9)}`,
               currentHex: { q: hex.q, r: hex.r },
-              rotation: hex.rotation || 0
+              rotation: hex.rotation || 0,
+              destroyed: false, // Ensure destroyed is initialized
+              damaged: false // Ensure damaged is initialized
             };
             allUnits.push(newUnit);
           });
@@ -56,6 +59,12 @@ function Game() {
         }
       });
     }
+    // Also ensure initial units from scenario.units have these properties
+    allUnits = allUnits.map(unit => ({
+      ...unit,
+      destroyed: unit.destroyed !== undefined ? unit.destroyed : false,
+      damaged: unit.damaged !== undefined ? unit.damaged : false
+    }));
     scenario.units = allUnits;
     return scenario;
   }, []);
@@ -130,6 +139,9 @@ function Game() {
   const onUnitClick = useCallback((unit) => {
     if (!isTargetingMode) return;
 
+    // If in targeting mode, set the selected target unit ID
+    setSelectedTargetUnitId(unit.id);
+
     const shermanUnit = currentScenario.units.find(u => u.id.includes("sherman"));
     
     // Check if target is in firing arc
@@ -163,7 +175,18 @@ function Game() {
 
       if (isHit) {
         const damageResult = calculateDamage(shermanUnit, unit);
-        console.log(`Penetration Roll: ${damageResult.roll} vs. Armor (${damageResult.armorSide}): ${damageResult.armorValue}. Needed: ${damageResult.scoreNeeded}. Result: ${damageResult.penetrated ? 'PENETRATION' : 'BOUNCE'}`);
+        let damageMessage = `Penetration Roll: ${damageResult.roll} vs. Armor (${damageResult.armorSide}): ${damageResult.armorValue}. Needed: ${damageResult.scoreNeeded}. Result: ${damageResult.penetrated ? 'PENETRATION' : 'BOUNCE'}`;
+        if (damageResult.penetrated) {
+          damageMessage += ` | Damage Roll: ${damageResult.damageRoll}.`;
+          if (damageResult.damage.destroyed) {
+            damageMessage += " Target destroyed!";
+            handleUpdateUnit(unit.id, { destroyed: true });
+          } else if (damageResult.damage.damaged) {
+            damageMessage += " Target damaged!";
+            handleUpdateUnit(unit.id, { damaged: true });
+          }
+        }
+        console.log(damageMessage);
         if (!damageResult.penetrated) {
           setTimeout(() => {
             playSound(shellDeflectedSound, 0.5); // Play deflected sound on bounce with a delay
@@ -378,6 +401,8 @@ function Game() {
           getHexesInLine={getHexesInLine}
           onFireMainGun={handleFireMainGun}
           targetingMessage={buttonMessage}
+          selectedTargetUnitId={selectedTargetUnitId} // Pass selected target ID
+          onUpdateUnit={handleUpdateUnit} // Pass update unit function
         />
       </div>
     </div>

@@ -185,21 +185,18 @@ export function getFiringArcHexes(shermanHex, allHexes) {
 }
 
 export function getAngleOfAttack(attackerHex, defenderHex) {
-  const dq = defenderHex.q - attackerHex.q;
-  const dr = defenderHex.r - attackerHex.r;
+  const dy = (defenderHex.q - attackerHex.q) * 1.5;
+  const dx = (defenderHex.r - attackerHex.r) * Math.sqrt(3) + (defenderHex.q - attackerHex.q) * Math.sqrt(3) / 2;
+  
+  const angleRad = Math.atan2(dx, dy);
+  let degrees = angleRad * (180 / Math.PI);
+  
+  if (degrees < 0) {
+    degrees += 360;
+  }
 
-  if (dq === 0 && dr > 0) return ROTATION_N;       // North
-  if (dq > 0 && dr >= 0 && dr < dq) return ROTATION_NE;   // North-East
-  if (dq > 0 && dr < 0 && -dr < dq) return ROTATION_SE;   // South-East
-  if (dq === 0 && dr < 0) return ROTATION_S;       // South
-  if (dq < 0 && dr <= 0 && -dr > dq) return ROTATION_SW;  // South-West
-  if (dq < 0 && dr > 0 && dr > -dq) return ROTATION_NW;   // North-West
+  // Snap to the nearest 60-degree increment
+  const snappedDegrees = Math.round(degrees / 60) * 60;
 
-  // Fallback for edge cases or if logic needs refinement
-  // This part of the logic is complex, might need adjustments based on hex grid math specifics
-  if (dq > 0 && dr === 0) return ROTATION_NE; // Simplified case for due NE
-  if (dq < 0 && dr === 0) return ROTATION_SW; // Simplified case for due SW
-
-
-  return 0; // Default or error case
+  return snappedDegrees % 360;
 }

@@ -85,22 +85,39 @@ export function calculateDamage(sherman, target) {
     // A result of 0 means the shot came from directly in front of the target.
     let relativeAngle = (angleShotCameFrom - targetRotation + 360) % 360;
 
-    let armorSide = 'front';
-    // The hit is on the front side if the relative angle is between 45 and 135 degrees.
-    if (relativeAngle > 45 && relativeAngle <= 135) {
+    let armorSide = 'front'; // Default for 330-30 degree arc
+
+    if (relativeAngle > 30 && relativeAngle <= 90) {
         armorSide = 'front_side';
-    // The hit is on the rear if the relative angle is between 135 and 225 degrees.
-    } else if (relativeAngle > 135 && relativeAngle <= 225) {
-        armorSide = 'rear';
-    // The hit is on the rear side if the relative angle is between 225 and 315 degrees.
-    } else if (relativeAngle > 225 && relativeAngle <= 315) {
+    } else if (relativeAngle > 90 && relativeAngle <= 150) {
         armorSide = 'rear_side';
+    } else if (relativeAngle > 150 && relativeAngle <= 210) {
+        armorSide = 'rear';
+    } else if (relativeAngle > 210 && relativeAngle <= 270) {
+        armorSide = 'rear_side';
+    } else if (relativeAngle > 270 && relativeAngle <= 330) {
+        armorSide = 'front_side';
     }
 
     const armorValue = target.armor_values[armorSide];
     const penetrationScoreNeeded = armorValue - sherman.armor_pen;
     const penetrationRoll = roll1D6();
     const isPenetration = penetrationRoll >= penetrationScoreNeeded;
+    let damageResult = {};
+    let damageRollValue = null;
+
+    if (isPenetration) {
+        damageRollValue = roll1D6();
+        if (damageRollValue <= 4) {
+            if (target.damaged) {
+                damageResult = { destroyed: true };
+            } else {
+                damageResult = { damaged: true };
+            }
+        } else {
+            damageResult = { destroyed: true };
+        }
+    }
 
     return {
         penetrated: isPenetration,
@@ -108,5 +125,7 @@ export function calculateDamage(sherman, target) {
         scoreNeeded: penetrationScoreNeeded,
         armorSide: armorSide,
         armorValue: armorValue,
+        damage: damageResult,
+        damageRoll: damageRollValue
     };
 }

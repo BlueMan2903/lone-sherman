@@ -22,3 +22,30 @@
   pointer-events: auto; /* Enable clicks */
   cursor: crosshair;
 }
+
+/* This is the style for the tank sprite itself when destroyed */
+.unitContainer.destroyed .unitImage {
+  filter: grayscale(80%) brightness(60%);
+  transform: rotate(var(--rotation-angle, 0deg)) skewX(-10deg) translateY(5px);
+}
+
+/* This is for the explosion animation spritesheet */
+.explosionEffect {
+  position: absolute;
+  width: 75px; /* Making the effect larger than the unit */
+  height: 75px;
+  top: 20%;
+  left: 50%;
+  transform: translate(-50%, -50%); /* Center the explosion on the unit */
+  background-repeat: no-repeat;
+  background-size: contain; /* Ensure the GIF fits within the container */
+  z-index: 12;
+}
+
+/* This makes the explosion visible when the unit is destroyed */
+.unitContainer.destroyed .explosionEffect {
+  opacity: 1;
+}
+
+/* The keyframes to play the explosion */
+/* No keyframes needed for GIF */

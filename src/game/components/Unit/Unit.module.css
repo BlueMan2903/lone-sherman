@@ -7,7 +7,7 @@
   align-items: center;
   pointer-events: none; /* Initially, so units don't block hex clicks. Change later for unit selection. */
   z-index: 10; /* Ensure units are above hexes */
-  /* transition: transform 0.2s ease-out; /* This transition is for the container, remove if only image rotates */
+  transition: left 1s ease-in-out, top 1s ease-in-out;
 }
 
 .unitImage {
@@ -34,7 +34,7 @@
   position: absolute;
   width: 75px; /* Making the effect larger than the unit */
   height: 75px;
-  top: 20%;
+  top: calc(20% + 25px);
   left: 50%;
   transform: translate(-50%, -50%); /* Center the explosion on the unit */
   background-repeat: no-repeat;
@@ -47,5 +47,40 @@
   opacity: 1;
 }
 
+.bounceEffect {
+  position: absolute;
+  width: 50px;
+  height: 50px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-repeat: no-repeat;
+  background-size: contain;
+  z-index: 13; /* Above the unit, below other effects */
+  opacity: 0.9;
+}
+
 /* The keyframes to play the explosion */
 /* No keyframes needed for GIF */
+
+.fireEffect {
+  position: absolute;
+  width: 60px;
+  height: 60px;
+  top: 45%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-repeat: no-repeat;
+  background-size: contain;
+  z-index: 11;
+  opacity: 0;
+}
+
+.fadeIn {
+  animation: fadeIn 0.8s ease-in forwards;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}

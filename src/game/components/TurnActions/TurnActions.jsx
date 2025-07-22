@@ -367,7 +367,6 @@ function TurnActions({ onManeuver, onAttack, onStartTurnLogic, onCommanderDecisi
   const handleDestroyTarget = () => {
     if (selectedTargetUnitId && onUpdateUnit) {
       onUpdateUnit(selectedTargetUnitId, { destroyed: true });
-      onSetNotification(`Unit ${selectedTargetUnitId} instantly destroyed!`);
     }
   };
 

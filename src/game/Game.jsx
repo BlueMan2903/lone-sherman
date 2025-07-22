@@ -30,6 +30,7 @@ function Game() {
   const [isTargetingMode, setIsTargetingMode] = useState(false);
   const [buttonMessage, setButtonMessage] = useState(null);
   const [onAttackComplete, setOnAttackComplete] = useState(null);
+  const [bouncingUnitId, setBouncingUnitId] = useState(null); // <--- NEW
   const [selectedTargetUnitId, setSelectedTargetUnitId] = useState(null); // New state for selected target
 
   const initializeScenarioUnits = useCallback(() => {
@@ -188,9 +189,16 @@ function Game() {
         }
         console.log(damageMessage);
         if (!damageResult.penetrated) {
+          // 1s delay before starting
           setTimeout(() => {
-            playSound(shellDeflectedSound, 0.5); // Play deflected sound on bounce with a delay
-          }, 1000); // 1 second delay
+            setBouncingUnitId(unit.id);
+            playSound(shellDeflectedSound, 1);
+            
+            // Let animation play for 1s
+            setTimeout(() => {
+              setBouncingUnitId(null);
+            }, 1000);
+          }, 700);
         }
       }
 
@@ -378,6 +386,7 @@ function Game() {
             units={currentScenario.units || []}
             onUnitClick={onUnitClick}
             isTargetingMode={isTargetingMode}
+            bouncingUnitId={bouncingUnitId} // <--- NEW
           />
         </div>
         {isTargetingMode && buttonMessage && <p className={styles.buttonMessage}>{buttonMessage}</p>}
@@ -402,7 +411,6 @@ function Game() {
           onFireMainGun={handleFireMainGun}
           targetingMessage={buttonMessage}
           selectedTargetUnitId={selectedTargetUnitId} // Pass selected target ID
-          onUpdateUnit={handleUpdateUnit} // Pass update unit function
         />
       </div>
     </div>

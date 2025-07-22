@@ -5,7 +5,7 @@ import Unit from '../Unit/Unit'; // Import the Unit component
 import styles from './HexGrid.module.css';
 import { axialToPixel, HEX_WIDTH, HEX_HEIGHT } from '../../logic/hexUtils';
 
-function HexGrid({ hexes, units, onUnitClick, isTargetingMode }) { // Added 'units' prop
+function HexGrid({ hexes, units, onUnitClick, isTargetingMode, bouncingUnitId }) { // Added 'units' prop
   let minX = Infinity, minY = Infinity;
   let maxX = -Infinity, maxY = -Infinity;
 
@@ -73,6 +73,7 @@ function HexGrid({ hexes, units, onUnitClick, isTargetingMode }) { // Added 'uni
               hexHeight={HEX_HEIGHT} // Pass hex dimension for relative sizing
               onClick={() => onUnitClick(unit)}
               isTargetingMode={isTargetingMode}
+              isBouncing={bouncingUnitId === unit.id} // <--- NEW
             />
           );
         }

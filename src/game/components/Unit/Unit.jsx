@@ -3,30 +3,38 @@ import React, { useEffect, useRef, useState } from 'react';
 import styles from './Unit.module.css';
 import tankExplosionGif from '../../../assets/vfx/tank_explosion.gif'; // Import the explosion GIF
 import fireGif from '../../../assets/vfx/fire.gif'; // Import the fire GIF
+import bounceGif from '../../../assets/vfx/bounce.gif'; // <--- NEW
+import { playSound } from '../../logic/audioManager';
+import tankDestroyedSound from '../../../assets/sounds/tank-destroyed.mp3';
 
 // Dynamically import unit sprites from the assets folder
 // This uses Vite's glob import feature.
 // Adjust the path if your assets/images/units structure is different.
 const unitSprites = import.meta.glob('/src/assets/images/units/*.png', { eager: true });
 
-function Unit({ unitData, pixelX, pixelY, hexHeight, onClick, isTargetingMode }) {
+function Unit({ unitData, pixelX, pixelY, hexHeight, onClick, isTargetingMode, isBouncing }) {
   // Destructure 'rotation' from unitData
   const { sprite, rotation, destroyed, damaged } = unitData;
   const imageRef = useRef(null);
   const rotationRef = useRef(rotation); // Initialize with the initial rotation
   const [currentVfx, setCurrentVfx] = useState(null); // State to manage current VFX GIF
+  const [showFire, setShowFire] = useState(false);
 
   useEffect(() => {
     if (destroyed) {
-      setCurrentVfx(tankExplosionGif);
-      const explosionDuration = 1000; // 1 second for explosion GIF, adjust if needed
+      playSound(tankDestroyedSound, 0.5); // Play sound on destruction
+      setCurrentVfx(`${tankExplosionGif}?${Date.now()}`); // Force reload
+      setShowFire(false); // Ensure fire is hidden initially
+      const explosionDuration = 1000; // 1 second for explosion GIF
       const timer = setTimeout(() => {
-        setCurrentVfx(fireGif);
+        setCurrentVfx(null); // Hide explosion
+        setShowFire(true); // Show fire
       }, explosionDuration);
 
       return () => clearTimeout(timer);
     } else {
       setCurrentVfx(null); // Reset VFX if not destroyed
+      setShowFire(false);
     }
   }, [destroyed]);
 
@@ -96,7 +104,9 @@ function Unit({ unitData, pixelX, pixelY, hexHeight, onClick, isTargetingMode })
         className={styles.unitImage}
         style={{ transformOrigin: 'center center' }} // Apply transform-origin here
       />
+      {isBouncing && <div className={styles.bounceEffect} style={{ backgroundImage: `url(${bounceGif})` }}></div>} {/* <--- NEW -->*/}
       {destroyed && currentVfx && <div className={styles.explosionEffect} style={{ backgroundImage: `url(${currentVfx})` }}></div>}
+      {showFire && <div className={`${styles.fireEffect} ${styles.fadeIn}`} style={{ backgroundImage: `url(${fireGif})` }}></div>}
       {damaged && !destroyed && <div className={styles.damagedEffect}></div>}
     </div>
   );

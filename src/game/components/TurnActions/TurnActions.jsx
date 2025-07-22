@@ -24,7 +24,7 @@ function TurnActions({ onManeuver, onAttack, onStartTurnLogic, onCommanderDecisi
   const [showDoublesManeuverOptions, setShowDoublesManeuverOptions] = useState(false);
   const [showDoublesAttackOptions, setShowDoublesAttackOptions] = useState(false);
   const [currentActionType, setCurrentActionType] = useState(null); // 'maneuver' or 'attack'
-  const [showMiscellaneousButton, setShowMiscellaneousButton] = useState(false);
+  const [miscellaneousExpended, setMiscellaneousExpended] = useState(false);
 
   useEffect(() => {
     if (diceResults.length > 0 && diceResults.length === expendedDice.length) {
@@ -32,6 +32,8 @@ function TurnActions({ onManeuver, onAttack, onStartTurnLogic, onCommanderDecisi
         setManeuverExpended(true);
       } else if (currentActionType === 'attack') {
         setAttackExpended(true);
+      } else if (currentActionType === 'miscellaneous') {
+        setMiscellaneousExpended(true);
       }
       setTimeout(() => {
         setDiceResults([]);
@@ -144,6 +146,40 @@ function TurnActions({ onManeuver, onAttack, onStartTurnLogic, onCommanderDecisi
     return { totalDice: dice, reasons };
   };
 
+  const calculateMiscellaneousDice = () => {
+    let dice = 0;
+    const reasons = [];
+
+    if (!shermanUnit || !currentScenario) return { totalDice: 0, reasons: ["Unit or scenario data not available."] };
+
+    const currentHexCoords = shermanUnit.currentHex;
+    const currentHex = currentScenario.map.hexes.find(
+      hex => hex.q === currentHexCoords.q && hex.r === currentHexCoords.r
+    );
+
+    if (currentHex) {
+      const terrain = currentHex.terrain;
+      if (terrain.includes("road")) {
+        dice += 1;
+        reasons.push(`+1 (Road terrain)`);
+      } else if (terrain.includes("field")) {
+        dice += 2;
+        reasons.push(`+2 (Field terrain)`);
+      } else if (terrain.includes("mud")) {
+        dice += 1;
+        reasons.push(`+1 (Mud terrain)`);
+      }
+    }
+
+    // Crew bonuses
+    if (shermanUnit.crew.commander !== "kia") {
+      dice += 1;
+      reasons.push(`+1 (Commander alive)`);
+    }
+
+    return { totalDice: dice, reasons };
+  };
+
   const getManeuverActionForRoll = (roll) => {
     if (roll === 1) return "REVERSE";
     if (roll >= 2 && roll <= 4) return "TURN";
@@ -211,7 +247,7 @@ function TurnActions({ onManeuver, onAttack, onStartTurnLogic, onCommanderDecisi
   const handleStartTurn = () => {
     setManeuverExpended(false);
     setAttackExpended(false);
-    setShowMiscellaneousButton(false);
+    setMiscellaneousExpended(false);
     setShowTurnButtons(false);
     setSelectedDiceForDoubles([]);
     setIsDoublesActive(false);
@@ -275,6 +311,20 @@ function TurnActions({ onManeuver, onAttack, onStartTurnLogic, onCommanderDecisi
     if (onAttack) {
       onAttack();
     }
+  };
+
+  const handleMiscellaneousClick = () => {
+    setCurrentActionType('miscellaneous');
+
+    // Play dice rolling sound
+    playSound(diceRollingSound, 0.4);
+
+    const { totalDice } = calculateMiscellaneousDice();
+    const newDiceResults = [];
+    for (let i = 0; i < totalDice; i++) {
+      newDiceResults.push(Math.floor(Math.random() * 6) + 1); // Roll a D6
+    }
+    setDiceResults(newDiceResults);
   };
 
   const handleLoadAction = () => {
@@ -493,8 +543,13 @@ function TurnActions({ onManeuver, onAttack, onStartTurnLogic, onCommanderDecisi
             </button>
           )}
 
-          {showMiscellaneousButton && (
-            <button className={`${styles.actionButton} ${styles.miscellaneousButton}`} onClick={() => console.log("Miscellaneous button clicked!")}>
+          {maneuverExpended && attackExpended && !miscellaneousExpended && (
+            <button 
+              className={`${styles.actionButton} ${styles.miscellaneousButton}`}
+              onClick={handleMiscellaneousClick}
+              title={`Roll ${calculateMiscellaneousDice().totalDice}
+${calculateMiscellaneousDice().reasons.join('
+')}`}>
               Miscellaneous
             </button>
           )}

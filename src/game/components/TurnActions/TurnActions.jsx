@@ -8,7 +8,7 @@ import DiceDisplay from '../DiceDisplay/DiceDisplay';
 
 import { getDistance } from '../../logic/hexUtils';
 
-function TurnActions({ onManeuver, onAttack, onStartTurnLogic, onCommanderDecision, shermanUnit, currentScenario, onMoveSherman, onReverseSherman, onTurnSherman, onUpdateUnit, onSetNotification, getHexesInLine, onFireMainGun, targetingMessage, selectedTargetUnitId }) {
+function TurnActions({ onManeuver, onAttack, onStartTurnLogic, onCommanderDecision, shermanUnit, currentScenario, onMoveSherman, onReverseSherman, onTurnSherman, onUpdateUnit, onSetNotification, getHexesInLine, onFireMainGun, targetingMessage, selectedTargetUnitId, onRemoveGermanSmoke, onEndTurn, onFireLevelCheck }) {
   // State to manage the current phase of the player's turn
   // 'initial' -> 'commander_decision' -> 'sherman_operations'
   const [currentPhase, setCurrentPhase] = useState('initial');
@@ -25,6 +25,7 @@ function TurnActions({ onManeuver, onAttack, onStartTurnLogic, onCommanderDecisi
   const [showDoublesAttackOptions, setShowDoublesAttackOptions] = useState(false);
   const [currentActionType, setCurrentActionType] = useState(null); // 'maneuver' or 'attack'
   const [miscellaneousExpended, setMiscellaneousExpended] = useState(false);
+  const [germanSmokeRemoved, setGermanSmokeRemoved] = useState(false);
 
   useEffect(() => {
     if (diceResults.length > 0 && diceResults.length === expendedDice.length) {
@@ -42,6 +43,16 @@ function TurnActions({ onManeuver, onAttack, onStartTurnLogic, onCommanderDecisi
       }, 500); // 0.5s delay
     }
   }, [expendedDice, diceResults, currentActionType]);
+
+  useEffect(() => {
+    if (miscellaneousExpended && !germanSmokeRemoved) {
+      onRemoveGermanSmoke();
+      setGermanSmokeRemoved(true);
+      setTimeout(() => {
+        onFireLevelCheck();
+      }, 1000); // Short delay before calling Fire Level Check
+    }
+  }, [miscellaneousExpended, germanSmokeRemoved, onRemoveGermanSmoke, onFireLevelCheck]);
 
   
 
@@ -465,7 +476,7 @@ function TurnActions({ onManeuver, onAttack, onStartTurnLogic, onCommanderDecisi
 
       {currentPhase === 'sherman_operations' && (
         <>
-          {diceResults.length === 0 && (
+          {diceResults.length === 0 && !miscellaneousExpended && (
             <button
               className={`${styles.actionButton} ${styles.maneuverButton} ${maneuverExpended ? styles.expended : ''}`}
               onClick={handleManeuverClick}
@@ -483,7 +494,7 @@ function TurnActions({ onManeuver, onAttack, onStartTurnLogic, onCommanderDecisi
             selectedDiceForDoubles={selectedDiceForDoubles}
             getActionForRoll={currentActionType === 'maneuver' ? getManeuverActionForRoll : getAttackActionForRoll}
           />
-          {diceResults.length === 0 && (
+          {diceResults.length === 0 && !miscellaneousExpended && (
             <button
               className={`${styles.actionButton} ${styles.attackButton} ${attackExpended ? styles.expended : ''}`}
               onClick={handleAttackClick}

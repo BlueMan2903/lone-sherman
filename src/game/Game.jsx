@@ -9,7 +9,7 @@ import tankMoveSound from '../assets/sounds/tank-move-1.mp3'; // Import tank mov
 import tankShotSound from '../assets/sounds/tank-shot-1.wav'; // Import tank shot sound
 import shellDeflectedSound from '../assets/sounds/shell-deflected.mp3'; // Import shell deflected sound
 import { getNeighborHex, getHexesInLine, hasClearPath, getDistance, getFiringArcHexes } from './logic/hexUtils';
-import { calculateToHitNumber, roll2D6, calculateDamage } from './logic/combatUtils';
+import { calculateToHitNumber, roll2D6, roll1D6, calculateDamage } from './logic/combatUtils';
 import scenario1Data from '../data/scenarios/scenario1.json';
 import styles from './Game.module.css';
 
@@ -32,6 +32,7 @@ function Game() {
   const [onAttackComplete, setOnAttackComplete] = useState(null);
   const [bouncingUnitId, setBouncingUnitId] = useState(null); // <--- NEW
   const [selectedTargetUnitId, setSelectedTargetUnitId] = useState(null); // New state for selected target
+  const [gameOver, setGameOver] = useState(false);
 
   const initializeScenarioUnits = useCallback(() => {
     const scenario = JSON.parse(JSON.stringify(scenario1Data));
@@ -337,8 +338,641 @@ function Game() {
     return true; // Assume success for now
   }, []);
 
+  const handleRemoveGermanSmoke = useCallback(() => {
+    setCurrentScenario(prevScenario => {
+      if (!prevScenario) return null;
+
+      const newScenario = JSON.parse(JSON.stringify(prevScenario));
+      newScenario.map.hexes = newScenario.map.hexes.map(hex => ({
+        ...hex,
+        germanSmoke: false
+      }));
+      console.log("All German smoke removed.");
+      return newScenario;
+    });
+  }, []);
+
+  const performMuddedGermanTankActions = useCallback(async (germanTank, shermanUnit) => {
+    setNotification(`German Tank ${germanTank.id} is stuck in mud! Rolling for actions...`);
+    playSound(tankMoveSound, 0.4); // Placeholder for dice roll sound
+
+    const diceRolls = [roll1D6(), roll1D6(), roll1D6()].sort((a, b) => a - b); // Roll 3D6 and sort ascending
+    console.log(`Mudded German Tank ${germanTank.id} rolled: ${diceRolls.join(', ')}`);
+
+    for (const roll of diceRolls) {
+      switch (roll) {
+        case 1:
+          setNotification(`German Tank ${germanTank.id}: Firing at Sherman!`);
+          await fireGermanTankAtSherman(germanTank, shermanUnit);
+          break;
+        case 2:
+          setNotification(`German Tank ${germanTank.id}: Turning 1 step towards Sherman...`);
+          await new Promise(resolve => setTimeout(resolve, 1000)); // Pause
+          turnGermanTankTowards(germanTank.id, shermanUnit.currentHex);
+          break;
+        case 3:
+          setNotification(`German Tank ${germanTank.id}: Move if legal, otherwise turn...`);
+          await new Promise(resolve => setTimeout(resolve, 1000)); // Pause
+          const movedCase3 = moveGermanTank(germanTank.id);
+          if (!movedCase3) {
+            turnGermanTankTowards(germanTank.id, shermanUnit.currentHex);
+          }
+          break;
+        case 4:
+          setNotification(`German Tank ${germanTank.id}: Move if legal, otherwise reverse...`);
+          await new Promise(resolve => setTimeout(resolve, 1000)); // Pause
+          const movedCase4 = moveGermanTank(germanTank.id);
+          if (!movedCase4) {
+            moveGermanTank(germanTank.id, false); // Attempt to reverse
+          }
+          break;
+        case 5:
+          setNotification(`German Tank ${germanTank.id}: Firing at Sherman!`);
+          await fireGermanTankAtSherman(germanTank, shermanUnit);
+          break;
+        case 6:
+          setNotification(`German Tank ${germanTank.id}: Deploying smoke!`);
+          await new Promise(resolve => setTimeout(resolve, 1000)); // Pause
+          deployGermanSmoke(germanTank.id);
+          break;
+        default:
+          break;
+      }
+      await new Promise(resolve => setTimeout(resolve, 1000)); // Pause between actions
+    }
+  }, [setNotification, fireGermanTankAtSherman, turnGermanTankTowards, moveGermanTank, deployGermanSmoke]);
+
+  const performFieldGermanTankActions = useCallback(async (germanTank, shermanUnit) => {
+    setNotification(`German Tank ${germanTank.id} is on a field hex! Rolling for actions...`);
+    playSound(tankMoveSound, 0.4); // Placeholder for dice roll sound
+
+    const diceRolls = [roll1D6(), roll1D6(), roll1D6(), roll1D6()].sort((a, b) => a - b); // Roll 4D6 and sort ascending
+    console.log(`Field German Tank ${germanTank.id} rolled: ${diceRolls.join(', ')}`);
+
+    for (const roll of diceRolls) {
+      let actionTaken = false; // Flag to track if an action was successfully taken
+      switch (roll) {
+        case 1:
+          setNotification(`German Tank ${germanTank.id}: Action 1...`);
+          await new Promise(resolve => setTimeout(resolve, 1000)); // Pause
+          const losCheck1 = hasClearPath(germanTank.currentHex, shermanUnit.currentHex, currentScenario.map.hexes);
+          if (!losCheck1.blocked) {
+            await fireGermanTankAtSherman(germanTank, shermanUnit);
+            actionTaken = true;
+          } else {
+            turnGermanTankTowards(germanTank.id, shermanUnit.currentHex);
+            actionTaken = true;
+          }
+          break;
+        case 2:
+          setNotification(`German Tank ${germanTank.id}: Action 2...`);
+          await new Promise(resolve => setTimeout(resolve, 1000)); // Pause
+          const movedCase2 = moveGermanTank(germanTank.id);
+          if (!movedCase2) {
+            turnGermanTankTowards(germanTank.id, shermanUnit.currentHex);
+          }
+          actionTaken = true;
+          break;
+        case 3:
+          setNotification(`German Tank ${germanTank.id}: Action 3...`);
+          await new Promise(resolve => setTimeout(resolve, 1000)); // Pause
+          const losCheck3 = hasClearPath(germanTank.currentHex, shermanUnit.currentHex, currentScenario.map.hexes);
+          if (!losCheck3.blocked) {
+            await fireGermanTankAtSherman(germanTank, shermanUnit);
+            // If Sherman was destroyed or KIA check initiated, stop further actions for this tank
+            if (shermanUnit.destroyed || shermanUnit.crew.commander === "kia" || shermanUnit.crew.loader === "kia" || shermanUnit.crew.gunner === "kia" || shermanUnit.crew.driver === "kia" || shermanUnit.crew.assistantDriver === "kia") {
+              return; // Exit the loop and function
+            }
+            actionTaken = true;
+          }
+          if (!actionTaken) { // Only attempt move if fire didn't happen or didn't destroy/KIA
+            moveGermanTank(germanTank.id);
+          }
+          break;
+        case 4:
+          setNotification(`German Tank ${germanTank.id}: Action 4...`);
+          await new Promise(resolve => setTimeout(resolve, 1000)); // Pause
+          turnGermanTankTowards(germanTank.id, shermanUnit.currentHex);
+          actionTaken = true;
+          break;
+        case 5:
+          setNotification(`German Tank ${germanTank.id}: Action 5...`);
+          await new Promise(resolve => setTimeout(resolve, 1000)); // Pause
+          const movedCase5 = moveGermanTank(germanTank.id);
+          if (!movedCase5) {
+            moveGermanTank(germanTank.id, false); // Attempt to reverse
+          }
+          actionTaken = true;
+          break;
+        case 6:
+          setNotification(`German Tank ${germanTank.id}: Action 6...`);
+          await new Promise(resolve => setTimeout(resolve, 1000)); // Pause
+          const losCheck6 = hasClearPath(germanTank.currentHex, shermanUnit.currentHex, currentScenario.map.hexes);
+          if (!losCheck6.blocked) {
+            await fireGermanTankAtSherman(germanTank, shermanUnit);
+            actionTaken = true;
+          } else {
+            handleUpdateUnit(germanTank.id, { hull_down: true });
+            actionTaken = true;
+          }
+          break;
+        default:
+          break;
+      }
+      if (actionTaken) {
+        await new Promise(resolve => setTimeout(resolve, 1000)); // Pause between actions if an action was taken
+      }
+    }
+  }, [setNotification, fireGermanTankAtSherman, turnGermanTankTowards, moveGermanTank, deployGermanSmoke, handleUpdateUnit, currentScenario]);
+
+  const performRoadGermanTankActions = useCallback(async (germanTank, shermanUnit) => {
+    setNotification(`German Tank ${germanTank.id} is on a road hex! Rolling for actions...`);
+    playSound(tankMoveSound, 0.4); // Placeholder for dice roll sound
+
+    const diceRolls = [roll1D6(), roll1D6(), roll1D6(), roll1D6()].sort((a, b) => a - b); // Roll 4D6 and sort ascending
+    console.log(`Road German Tank ${germanTank.id} rolled: ${diceRolls.join(', ')}`);
+
+    for (const roll of diceRolls) {
+      let actionTaken = false;
+      switch (roll) {
+        case 1:
+          setNotification(`German Tank ${germanTank.id}: Action 1 (Fire > Turn)...`);
+          await new Promise(resolve => setTimeout(resolve, 1000)); // Pause
+          const losCheck1 = hasClearPath(germanTank.currentHex, shermanUnit.currentHex, currentScenario.map.hexes);
+          if (!losCheck1.blocked) {
+            await fireGermanTankAtSherman(germanTank, shermanUnit);
+            actionTaken = true;
+          } else {
+            turnGermanTankTowards(germanTank.id, shermanUnit.currentHex);
+            actionTaken = true;
+          }
+          break;
+        case 2:
+          setNotification(`German Tank ${germanTank.id}: Action 2 (Move > Turn)...`);
+          await new Promise(resolve => setTimeout(resolve, 1000)); // Pause
+          const movedCase2 = moveGermanTank(germanTank.id);
+          if (!movedCase2) {
+            turnGermanTankTowards(germanTank.id, shermanUnit.currentHex);
+          }
+          actionTaken = true;
+          break;
+        case 3:
+          setNotification(`German Tank ${germanTank.id}: Action 3 (Fire > Move)...`);
+          await new Promise(resolve => setTimeout(resolve, 1000)); // Pause
+          const losCheck3 = hasClearPath(germanTank.currentHex, shermanUnit.currentHex, currentScenario.map.hexes);
+          if (!losCheck3.blocked) {
+            await fireGermanTankAtSherman(germanTank, shermanUnit);
+            actionTaken = true;
+          } else {
+            moveGermanTank(germanTank.id);
+            actionTaken = true;
+          }
+          break;
+        case 4:
+          setNotification(`German Tank ${germanTank.id}: Action 4 (Move > Turn)...`);
+          await new Promise(resolve => setTimeout(resolve, 1000)); // Pause
+          const movedCase4 = moveGermanTank(germanTank.id);
+          if (!movedCase4) {
+            turnGermanTankTowards(germanTank.id, shermanUnit.currentHex);
+          }
+          actionTaken = true;
+          break;
+        case 5:
+          setNotification(`German Tank ${germanTank.id}: Action 5 (Move > Reverse)...`);
+          await new Promise(resolve => setTimeout(resolve, 1000)); // Pause
+          const movedCase5 = moveGermanTank(germanTank.id);
+          if (!movedCase5) {
+            moveGermanTank(germanTank.id, false); // Attempt to reverse
+          }
+          actionTaken = true;
+          break;
+        case 6:
+          setNotification(`German Tank ${germanTank.id}: Action 6 (Fire > Smoke)...`);
+          await new Promise(resolve => setTimeout(resolve, 1000)); // Pause
+          const losCheck6 = hasClearPath(germanTank.currentHex, shermanUnit.currentHex, currentScenario.map.hexes);
+          if (!losCheck6.blocked) {
+            await fireGermanTankAtSherman(germanTank, shermanUnit);
+            actionTaken = true;
+          } else {
+            deployGermanSmoke(germanTank.id);
+            actionTaken = true;
+          }
+          break;
+        default:
+          break;
+      }
+      if (actionTaken) {
+        await new Promise(resolve => setTimeout(resolve, 1000)); // Pause between actions if an action was taken
+      }
+    }
+  }, [setNotification, fireGermanTankAtSherman, turnGermanTankTowards, moveGermanTank, deployGermanSmoke, currentScenario]);
+
+  const handleGermanTankOperations = useCallback(async () => {
+    console.log("Starting German Tank Operations...");
+    if (!currentScenario) return;
+
+    const germanTanks = currentScenario.units.filter(unit => unit.faction === 'axis' && !unit.destroyed);
+    const shermanUnit = currentScenario.units.find(unit => unit.id.includes("sherman"));
+
+    if (!shermanUnit) {
+      console.warn("Sherman unit not found for German operations.");
+      return;
+    }
+
+    // Sort German tanks by distance to Sherman (closest first)
+    const sortedGermanTanks = [...germanTanks].sort((a, b) => {
+      const distA = getDistance(a.currentHex, shermanUnit.currentHex);
+      const distB = getDistance(b.currentHex, shermanUnit.currentHex);
+      return distA - distB;
+    });
+
+    for (const germanTank of sortedGermanTanks) {
+      const germanTankHex = currentScenario.map.hexes.find(hex => hex.q === germanTank.currentHex.q && hex.r === germanTank.currentHex.r);
+
+      if (germanTank.damaged) {
+        await performDamagedGermanTankActions(germanTank, shermanUnit);
+      } else {
+        const germanTankHex = currentScenario.map.hexes.find(hex => hex.q === germanTank.currentHex.q && hex.r === germanTank.currentHex.r);
+        if (germanTankHex && germanTankHex.terrain.includes("road")) {
+          await performRoadGermanTankActions(germanTank, shermanUnit);
+        } else if (germanTankHex && germanTankHex.terrain.includes("mud")) {
+          await performMuddedGermanTankActions(germanTank, shermanUnit);
+        } else if (germanTankHex && germanTankHex.terrain.includes("field")) {
+          await performFieldGermanTankActions(germanTank, shermanUnit);
+        }
+      }
+    }
+
+    // After all German tanks have acted, the turn truly ends.
+    // This might need adjustment if there are more phases after German tanks.
+    console.log("German Tank Operations complete.");
+  }, [currentScenario, handleUpdateUnit, performDamagedGermanTankActions, performUndamagedGermanTankActions, performMuddedGermanTankActions, performFieldGermanTankActions, performRoadGermanTankActions]);
+
+  const repairGermanTank = useCallback((tankId) => {
+    handleUpdateUnit(tankId, { damaged: false });
+    console.log(`German Tank ${tankId} repaired.`);
+  }, [handleUpdateUnit]);
+
+  const turnGermanTankTowards = useCallback((germanTankId, targetHex) => {
+    setCurrentScenario(prevScenario => {
+      if (!prevScenario) return null;
+      const newScenario = JSON.parse(JSON.stringify(prevScenario));
+      const germanTankIndex = newScenario.units.findIndex(unit => unit.id === germanTankId);
+
+      if (germanTankIndex !== -1) {
+        const germanTank = newScenario.units[germanTankIndex];
+        const currentGermanHex = germanTank.currentHex;
+
+        const angleToSherman = getAngleOfAttack(currentGermanHex, targetHex);
+
+        // Calculate shortest turn
+        let currentRotation = germanTank.rotation;
+        let diff = angleToSherman - currentRotation;
+
+        // Normalize diff to be within -180 to 180 degrees for shortest path
+        if (diff > 180) diff -= 360;
+        if (diff < -180) diff += 360;
+
+        // Snap to nearest 60-degree increment
+        const turnAmount = Math.round(diff / 60) * 60;
+        let newRotation = (currentRotation + turnAmount + 360) % 360;
+
+        germanTank.rotation = newRotation;
+        console.log(`German Tank ${germanTankId} turned to ${newRotation} degrees towards Sherman.`);
+      }
+      return newScenario;
+    });
+  }, []);
+
+  const moveGermanTank = useCallback((germanTankId, forward = true) => {
+    let moveSuccessful = false;
+    setCurrentScenario(prevScenario => {
+      if (!prevScenario) return null;
+      const newScenario = JSON.parse(JSON.stringify(prevScenario));
+      const germanTankIndex = newScenario.units.findIndex(unit => unit.id === germanTankId);
+
+      if (germanTankIndex !== -1) {
+        const germanTank = newScenario.units[germanTankIndex];
+        const direction = forward ? germanTank.rotation : (germanTank.rotation + 180) % 360;
+        const newHex = getNeighborHex(germanTank.currentHex, direction);
+
+        const isOccupied = newScenario.units.some(
+          unit => unit.id !== germanTankId && unit.currentHex.q === newHex.q && unit.currentHex.r === newHex.r
+        );
+
+        const isOffMap = !newScenario.map.hexes.some(
+          hex => hex.q === newHex.q && hex.r === newHex.r
+        );
+
+        if (!isOccupied && !isOffMap) {
+          germanTank.currentHex = newHex;
+          console.log(`German Tank ${germanTankId} moved to q:${newHex.q}, r:${newHex.r}`);
+          playSound(tankMoveSound, 0.4);
+          moveSuccessful = true;
+        } else {
+          console.log(`German Tank ${germanTankId} could not move. Occupied: ${isOccupied}, OffMap: ${isOffMap}`);
+        }
+      }
+      return newScenario;
+    });
+    return moveSuccessful;
+  }, []);
+
+  const deployGermanSmoke = useCallback((germanTankId) => {
+    setCurrentScenario(prevScenario => {
+      if (!prevScenario) return null;
+      const newScenario = JSON.parse(JSON.stringify(prevScenario));
+      const germanTank = newScenario.units.find(unit => unit.id === germanTankId);
+
+      if (germanTank) {
+        const hexIndex = newScenario.map.hexes.findIndex(
+          hex => hex.q === germanTank.currentHex.q && hex.r === germanTank.currentHex.r
+        );
+        if (hexIndex !== -1) {
+          newScenario.map.hexes[hexIndex].germanSmoke = true;
+          console.log(`German Tank ${germanTankId} deployed smoke at q:${germanTank.currentHex.q}, r:${germanTank.currentHex.r}`);
+        }
+      }
+      return newScenario;
+    });
+  }, []);
+
+  const fireGermanTankAtSherman = useCallback(async (germanTank, shermanUnit) => {
+    setNotification(`German Tank ${germanTank.id} is firing at Sherman!`);
+    await new Promise(resolve => setTimeout(resolve, 1000)); // Pause for notification
+
+    const losCheck = hasClearPath(germanTank.currentHex, shermanUnit.currentHex, currentScenario.map.hexes);
+
+    if (losCheck.blocked) {
+      setNotification(`German Tank ${germanTank.id}: Line of sight to Sherman obstructed by ${losCheck.blockingTerrain}.`);
+      console.log(`German Tank ${germanTank.id}: Line of sight to Sherman obstructed by ${losCheck.blockingTerrain}.`);
+    } else {
+      playSound(tankShotSound, 0.5); // Play tank shot sound
+
+      const { toHit, breakdown } = calculateToHitNumber(germanTank, shermanUnit, currentScenario.map.hexes);
+      const diceRoll = roll2D6();
+      const isHit = diceRoll.total >= toHit;
+
+      let hitMessage = `German Tank ${germanTank.id} To-Hit: ${toHit} (Roll: ${diceRoll.total} [${diceRoll.rolls.join('+')}]) - ${isHit ? 'HIT!' : 'MISS!'}`;
+      hitMessage += `\nBreakdown: Dist(${breakdown.distance}), Size(${breakdown.size}), Build(${breakdown.building}), Smoke(${breakdown.smoke}), Hull(${breakdown.hullDown}), Arc(${breakdown.southernArc})`;
+
+      console.log(hitMessage);
+      setNotification(hitMessage);
+
+      if (isHit) {
+        const damageResult = calculateDamage(germanTank, shermanUnit);
+        let damageMessage = `Penetration Roll: ${damageResult.roll} vs. Armor (${damageResult.armorSide}): ${damageResult.armorValue}. Needed: ${damageResult.scoreNeeded}. Result: ${damageResult.penetrated ? 'PENETRATION' : 'BOUNCE'}`;
+        if (damageResult.penetrated) {
+          damageMessage += ` | Penetration Roll: ${damageResult.damageRoll}.`; // Renamed damageRoll to penetrationRoll for clarity
+          const shermanDamageRoll = roll1D6();
+          let shermanUpdates = {};
+          let outcomeMessage = `Sherman hit! Damage Roll: ${shermanDamageRoll}. Outcome: `;
+
+          switch (shermanDamageRoll) {
+            case 1:
+              outcomeMessage += "DESTROYED! Game Over.";
+              shermanUpdates = { destroyed: true };
+              setGameOver(true);
+              break;
+            case 2:
+              outcomeMessage += "KIA Check initiated.";
+              // handleKIACheck will be called, which will then call handleEndTurn
+              handleKIACheck();
+              setNotification(outcomeMessage);
+            case 3:
+            case 4:
+              outcomeMessage += "Fire Spreads! Fire Level increased by 1.";
+              shermanUpdates = { fireLevel: shermanUnit.fireLevel + 1 };
+              break;
+            case 5:
+              outcomeMessage += "Turret Damaged!";
+              shermanUpdates = { turretDamaged: "Yes" };
+              break;
+            case 6:
+              outcomeMessage += "Immobilized!";
+              shermanUpdates = { immobilized: "Yes" };
+              break;
+            default:
+              outcomeMessage += "Unknown.";
+          }
+          setNotification(outcomeMessage);
+          if (Object.keys(shermanUpdates).length > 0) {
+            handleUpdateUnit(shermanUnit.id, shermanUpdates);
+          }
+        }
+        console.log(damageMessage);
+        setNotification(damageMessage);
+
+        if (!damageResult.penetrated) {
+          // 1s delay before starting bounce animation/sound
+          setTimeout(() => {
+            setBouncingUnitId(shermanUnit.id);
+            playSound(shellDeflectedSound, 1);
+
+            // Let animation play for 1s
+            setTimeout(() => {
+              setBouncingUnitId(null);
+            }, 1000);
+          }, 700); // This delay is for the bounce effect, not the main gun sound
+        }
+      }
+    }
+    await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate action time
+  }, [currentScenario, setNotification, handleUpdateUnit, setBouncingUnitId]);
+
+  const performDamagedGermanTankActions = useCallback(async (germanTank, shermanUnit) => {
+    setNotification(`German Tank ${germanTank.id} is damaged. Rolling for actions...`);
+    playSound(tankMoveSound, 0.4); // Placeholder for dice roll sound
+
+    const diceRolls = [roll1D6(), roll1D6()].sort((a, b) => a - b); // Roll 2D6 and sort ascending
+    console.log(`Damaged German Tank ${germanTank.id} rolled: ${diceRolls.join(', ')}`);
+
+    for (const roll of diceRolls) {
+      switch (roll) {
+        case 1:
+          setNotification(`German Tank ${germanTank.id}: Repairing...`);
+          await new Promise(resolve => setTimeout(resolve, 1000)); // Pause for notification
+          repairGermanTank(germanTank.id);
+          break;
+        case 2:
+          setNotification(`German Tank ${germanTank.id}: Turning 1 step towards Sherman...`);
+          await new Promise(resolve => setTimeout(resolve, 1000)); // Pause
+          turnGermanTankTowards(germanTank.id, shermanUnit.currentHex);
+          break;
+        case 3:
+          setNotification(`German Tank ${germanTank.id}: Move if legal, otherwise turn...`);
+          await new Promise(resolve => setTimeout(resolve, 1000)); // Pause
+          const movedCase3 = moveGermanTank(germanTank.id);
+          if (!movedCase3) {
+            turnGermanTankTowards(germanTank.id, shermanUnit.currentHex);
+          }
+          break;
+        case 4:
+          setNotification(`German Tank ${germanTank.id}: Move if legal, otherwise reverse...`);
+          await new Promise(resolve => setTimeout(resolve, 1000)); // Pause
+          const movedCase4 = moveGermanTank(germanTank.id);
+          if (!movedCase4) {
+            moveGermanTank(germanTank.id, false); // Attempt to reverse
+          }
+          break;
+        case 5:
+          setNotification(`German Tank ${germanTank.id}: Firing at Sherman!`);
+          await fireGermanTankAtSherman(germanTank, shermanUnit);
+          break;
+        case 6:
+          setNotification(`German Tank ${germanTank.id}: Deploying smoke!`);
+          await new Promise(resolve => setTimeout(resolve, 1000)); // Pause
+          deployGermanSmoke(germanTank.id);
+          break;
+        default:
+          break;
+      }
+      await new Promise(resolve => setTimeout(resolve, 1000)); // Pause between actions
+    }
+  }, [handleUpdateUnit, setNotification, repairGermanTank, turnGermanTankTowards, moveGermanTank, deployGermanSmoke, fireGermanTankAtSherman]);
+
+  const performUndamagedGermanTankActions = useCallback(async (germanTank, shermanUnit) => {
+    setNotification(`German Tank ${germanTank.id} is undamaged. (Placeholder)`);
+    await new Promise(resolve => setTimeout(resolve, 1000)); // Pause for notification
+  }, [setNotification]);
+
+  const handleEndTurn = useCallback(() => {
+    setTurnNumber(prevTurn => prevTurn + 1);
+    setCurrentScenario(prevScenario => {
+      if (!prevScenario) return null;
+      const newScenario = JSON.parse(JSON.stringify(prevScenario));
+      return newScenario;
+    });
+    console.log(`Ending Turn ${turnNumber}. Starting next turn...`);
+    handleGermanTankOperations(); // Call German tank operations after player's turn
+  }, [turnNumber, handleGermanTankOperations]);
+
+  const handleKIACheck = useCallback(() => {
+    const shermanUnit = currentScenario.units.find(unit => unit.id.includes("sherman"));
+    if (!shermanUnit) return;
+
+    setNotification("KIA Check! Rolling 1D6...");
+    playSound(tankMoveSound, 0.4); // Placeholder for dice roll sound
+
+    const roll = roll1D6();
+    let outcomeMessage = `KIA Check Roll: ${roll}. Outcome: `;
+    let crewUpdate = {};
+
+    switch (roll) {
+      case 1:
+        outcomeMessage += "Commander KIA!";
+        crewUpdate = { commander: "kia" };
+        break;
+      case 2:
+        outcomeMessage += "Loader KIA!";
+        crewUpdate = { loader: "kia" };
+        break;
+      case 3:
+        outcomeMessage += "Gunner KIA!";
+        crewUpdate = { gunner: "kia" };
+        break;
+      case 4:
+        outcomeMessage += "Driver KIA!";
+        crewUpdate = { driver: "kia" };
+        break;
+      case 5:
+        outcomeMessage += "Assistant Driver KIA!";
+        crewUpdate = { assistantDriver: "kia" };
+        break;
+      case 6:
+        if (shermanUnit.crew.commander === "popped hatch") {
+          outcomeMessage += "Commander KIA (due to popped hatch)!";
+          crewUpdate = { commander: "kia" };
+        } else {
+          outcomeMessage += "No KIA (Commander was buttoned up).";
+        }
+        break;
+      default:
+        outcomeMessage += "Unknown KIA result.";
+    }
+
+    setNotification(outcomeMessage);
+    if (Object.keys(crewUpdate).length > 0) {
+      handleUpdateUnit(shermanUnit.id, { crew: { ...shermanUnit.crew, ...crewUpdate } });
+    }
+
+    // After KIA check, proceed to end turn
+    setTimeout(() => {
+      handleEndTurn();
+    }, 3000); // 3 second delay for player to read outcome
+
+  }, [currentScenario, handleEndTurn, handleUpdateUnit]);
+
+  const handleFireLevelCheck = useCallback(() => {
+    const shermanUnit = currentScenario.units.find(unit => unit.id.includes("sherman"));
+    if (!shermanUnit || shermanUnit.fireLevel === 0) {
+      console.log("Fire Level is 0, skipping Fire Level Check.");
+      handleEndTurn();
+      return;
+    }
+
+        setNotification(`Fire Level Check! Rolling ${shermanUnit.fireLevel} dice...`);
+    playSound(tankMoveSound, 0.4); // Using tankMoveSound as a placeholder for dice roll sound
+
+    let rolls = [];
+    for (let i = 0; i < shermanUnit.fireLevel; i++) {
+      rolls.push(roll1D6());
+    }
+    const lowestRoll = Math.min(...rolls);
+
+    let outcomeMessage = `Fire Level Check: Rolled ${rolls.join(', ')}. Lowest roll: ${lowestRoll}.
+`;
+    let updates = {};
+
+    switch (lowestRoll) {
+      case 1:
+        outcomeMessage += "Outcome: DESTROYED! Game Over.";
+        updates = { destroyed: true };
+        // TODO: Implement Game Over state
+        break;
+      case 2:
+        outcomeMessage += "Outcome: KIA Check initiated.";
+        handleKIACheck(); // Call the new KIA check function
+        return; // KIA check will handle ending the turn
+      case 3:
+      case 4:
+        outcomeMessage += "Outcome: Fire Spreads! Fire Level increased by 1.";
+        updates = { fireLevel: shermanUnit.fireLevel + 1 };
+        break;
+      case 5:
+        outcomeMessage += "Outcome: Turret Damaged!";
+        updates = { turretDamaged: "Yes" };
+        break;
+      case 6:
+        outcomeMessage += "Outcome: Immobilized!";
+        updates = { immobilized: "Yes" };
+        break;
+      default:
+        outcomeMessage += "Outcome: Unknown.";
+    }
+
+    setNotification(outcomeMessage);
+    if (Object.keys(updates).length > 0) {
+      handleUpdateUnit(shermanUnit.id, updates);
+    }
+
+    // Proceed to next phase after a delay
+    setTimeout(() => {
+      handleEndTurn();
+    }, 3000); // 3 second delay for player to read outcome
+
+  }, [currentScenario, handleEndTurn, handleUpdateUnit, handleKIACheck]);
+
   if (!currentScenario) {
     return <div>Loading game...</div>;
+  }
+
+  if (gameOver) {
+    return (
+      <div className={styles.gameOverScreen}>
+        <Notification message="Your Sherman was destroyed. YOU LOSE" onClose={() => {}} />
+      </div>
+    );
   }
 
   const enemyTanks = currentScenario.units.filter(unit => unit.faction === 'axis');
@@ -411,6 +1045,9 @@ function Game() {
           onFireMainGun={handleFireMainGun}
           targetingMessage={buttonMessage}
           selectedTargetUnitId={selectedTargetUnitId} // Pass selected target ID
+          onRemoveGermanSmoke={handleRemoveGermanSmoke}
+          onEndTurn={handleEndTurn}
+          onFireLevelCheck={handleFireLevelCheck}
         />
       </div>
     </div>

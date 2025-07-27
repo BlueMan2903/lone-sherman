@@ -22,7 +22,10 @@ function Unit({ unitData, pixelX, pixelY, hexHeight, onClick, isTargetingMode, i
 
   useEffect(() => {
     if (destroyed) {
-      playSound(tankDestroyedSound, 0.5); // Play sound on destruction
+      // Delay playing tankDestroyedSound by 1 second
+      const soundDelayTimer = setTimeout(() => {
+        playSound(tankDestroyedSound, 0.5); // Play sound on destruction
+      }, 1000); // 1 second delay
       setCurrentVfx(`${tankExplosionGif}?${Date.now()}`); // Force reload
       setShowFire(false); // Ensure fire is hidden initially
       const explosionDuration = 1000; // 1 second for explosion GIF

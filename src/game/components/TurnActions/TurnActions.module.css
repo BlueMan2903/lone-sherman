@@ -71,7 +71,8 @@
   background-color: #0056b3; /* Darker blue */
 }
 
-.maneuverButton.expended {
+.maneuverButton.expended,
+.attackButton.expended {
   opacity: 0.5;
   cursor: not-allowed;
 }

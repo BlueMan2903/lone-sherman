@@ -43,11 +43,7 @@ function TurnActions({ onManeuver, onAttack, onStartTurnLogic, onCommanderDecisi
     }
   }, [expendedDice, diceResults, currentActionType]);
 
-  useEffect(() => {
-    if (maneuverExpended && attackExpended) {
-      setShowMiscellaneousButton(true);
-    }
-  }, [maneuverExpended, attackExpended]);
+  
 
   
 
@@ -220,10 +216,29 @@ function TurnActions({ onManeuver, onAttack, onStartTurnLogic, onCommanderDecisi
       const firstDieRoll = diceResults[selectedDieIndex];
       if (firstDieRoll === roll) {
         // It's a double!
-        setSelectedDiceForDoubles([selectedDieIndex, index]);
-        setIsDoublesActive(true);
-        setSelectedDieIndex(null); // Clear single selection
-        setSelectedAction(null); // Action will be chosen by doubles buttons
+        if (currentActionType === 'maneuver' &&
+            shermanUnit.crew.driver === 'kia' &&
+            shermanUnit.crew.assistantDriver === 'kia') {
+          onSetNotification("Doubles for Maneuver are not allowed if both Driver and Assistant Driver are KIA.");
+          // Do not activate doubles, keep the single die selected
+          setSelectedDieIndex(index); // Select the newly clicked die as a single
+          setSelectedAction(action);
+          setIsDoublesActive(false);
+          setSelectedDiceForDoubles([]);
+        } else if (currentActionType === 'attack' &&
+                   shermanUnit.crew.gunner === 'kia' &&
+                   shermanUnit.crew.loader === 'kia') {
+          onSetNotification("Doubles for Attack are not allowed if both Gunner and Loader are KIA.");
+          setSelectedDieIndex(index);
+          setSelectedAction(action);
+          setIsDoublesActive(false);
+          setSelectedDiceForDoubles([]);
+        } else {
+          setSelectedDiceForDoubles([selectedDieIndex, index]);
+          setIsDoublesActive(true);
+          setSelectedDieIndex(null); // Clear single selection
+          setSelectedAction(null); // Action will be chosen by doubles buttons
+        }
       } else {
         // Not a double, new single selection
         setSelectedDieIndex(index);
@@ -450,7 +465,7 @@ function TurnActions({ onManeuver, onAttack, onStartTurnLogic, onCommanderDecisi
 
       {currentPhase === 'sherman_operations' && (
         <>
-          {diceResults.length === 0 && !showMiscellaneousButton && (
+          {diceResults.length === 0 && (
             <button
               className={`${styles.actionButton} ${styles.maneuverButton} ${maneuverExpended ? styles.expended : ''}`}
               onClick={handleManeuverClick}
@@ -468,7 +483,7 @@ function TurnActions({ onManeuver, onAttack, onStartTurnLogic, onCommanderDecisi
             selectedDiceForDoubles={selectedDiceForDoubles}
             getActionForRoll={currentActionType === 'maneuver' ? getManeuverActionForRoll : getAttackActionForRoll}
           />
-          {diceResults.length === 0 && !showMiscellaneousButton && (
+          {diceResults.length === 0 && (
             <button
               className={`${styles.actionButton} ${styles.attackButton} ${attackExpended ? styles.expended : ''}`}
               onClick={handleAttackClick}
@@ -543,13 +558,12 @@ function TurnActions({ onManeuver, onAttack, onStartTurnLogic, onCommanderDecisi
             </button>
           )}
 
-          {maneuverExpended && attackExpended && !miscellaneousExpended && (
+          {maneuverExpended && attackExpended && !miscellaneousExpended && diceResults.length === 0 && (
             <button 
               className={`${styles.actionButton} ${styles.miscellaneousButton}`}
               onClick={handleMiscellaneousClick}
               title={`Roll ${calculateMiscellaneousDice().totalDice}
-${calculateMiscellaneousDice().reasons.join('
-')}`}>
+              ${calculateMiscellaneousDice().reasons.join('\n')}`}>
               Miscellaneous
             </button>
           )}

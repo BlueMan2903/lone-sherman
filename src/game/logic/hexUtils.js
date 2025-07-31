@@ -185,18 +185,38 @@ export function getFiringArcHexes(shermanHex, allHexes) {
 }
 
 export function getAngleOfAttack(attackerHex, defenderHex) {
-  const dy = (defenderHex.q - attackerHex.q) * 1.5;
-  const dx = (defenderHex.r - attackerHex.r) * Math.sqrt(3) + (defenderHex.q - attackerHex.q) * Math.sqrt(3) / 2;
-  
-  const angleRad = Math.atan2(dx, dy);
-  let degrees = angleRad * (180 / Math.PI);
-  
-  if (degrees < 0) {
-    degrees += 360;
+  const dq = defenderHex.q - attackerHex.q;
+  const dr = defenderHex.r - attackerHex.r;
+
+  if (dq === 0 && dr === 0) {
+    return 0; // Or current rotation, they are on the same hex
   }
 
-  // Snap to the nearest 60-degree increment
-  const snappedDegrees = Math.round(degrees / 60) * 60;
+  // Using cube coordinates (q, r, s) for dot product is the most reliable way
+  // to find the closest hex direction on a hex grid. s = -q - r.
+  const ds = -dq - dr;
 
-  return snappedDegrees % 360;
+  const AXIAL_DIRECTIONS_CUBE = [
+    { q: 0, r: 1, s: -1 },  // N (0)
+    { q: 1, r: 0, s: -1 },  // NE (60)
+    { q: 1, r: -1, s: 0 }, // SE (120)
+    { q: 0, r: -1, s: 1 }, // S (180)
+    { q: -1, r: 0, s: 1 },  // SW (240)
+    { q: -1, r: 1, s: 0 }   // NW (300)
+  ];
+
+  let bestDirectionIndex = 0;
+  let maxDotProduct = -Infinity;
+
+  for (let i = 0; i < AXIAL_DIRECTIONS_CUBE.length; i++) {
+    const dir = AXIAL_DIRECTIONS_CUBE[i];
+    const dotProduct = dq * dir.q + dr * dir.r + ds * dir.s;
+    
+    if (dotProduct > maxDotProduct) {
+      maxDotProduct = dotProduct;
+      bestDirectionIndex = i;
+    }
+  }
+
+  return bestDirectionIndex * 60;
 }

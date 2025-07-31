@@ -96,7 +96,7 @@ function Unit({ unitData, pixelX, pixelY, hexHeight, onClick, isTargetingMode, i
 
   return (
     <div
-      className={`${styles.unitContainer} ${canBeTargeted ? styles.targeting : ''} ${destroyed ? styles.destroyed : ''} ${damaged && !destroyed ? styles.damaged : ''}`}
+      className={`${styles.unitContainer} ${canBeTargeted ? styles.targeting : ''} ${destroyed ? styles.destroyed : ''} ${damaged && !destroyed ? styles.damaged : ''} ${unitData.hull_down ? styles.hullDown : ''}`}
       style={containerStyle}
       onClick={canBeTargeted ? onClick : undefined}
     >

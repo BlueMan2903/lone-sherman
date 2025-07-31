@@ -6,7 +6,7 @@ import { HEX_WIDTH, HEX_HEIGHT } from '../../logic/hexUtils';
 // Dynamically import all terrain texture images from the specified folder
 const terrainTextures = import.meta.glob('/src/assets/images/terrain/*.{png,jpg,jpeg,gif,webp}', { eager: true });
 
-function Hex({ hexData, pixelX, pixelY }) {
+function Hex({ hexData, pixelX, pixelY, isHullDown }) {
   // Destructure 'rotation', and NEW 'shermanSmoke' and 'germanSmoke' from hexData
   const { id, q, r, terrain, rotation, shermanSmoke, germanSmoke } = hexData; // <-- UPDATED LINE
 
@@ -48,6 +48,7 @@ function Hex({ hexData, pixelX, pixelY }) {
           ({q}, {r})
         </span>
         {(shermanSmoke || germanSmoke) && <div className={styles.smokeOverlay}></div>} {/* <-- UPDATED LINE */}
+        {isHullDown && <div className={styles.hullDownText}>HULL DOWN</div>}
       </div>
     </div>
   );

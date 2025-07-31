@@ -49,6 +49,7 @@ function HexGrid({ hexes, units, onUnitClick, isTargetingMode, bouncingUnitId })
           hexData={hex}
           pixelX={hex.pixelX + offsetX} // Apply offset for correct positioning within the container
           pixelY={hex.pixelY + offsetY} // Apply offset for correct positioning within the container
+          isHullDown={units.some(unit => unit.currentHex.q === hex.q && unit.currentHex.r === hex.r && unit.hull_down)}
         />
       ))}
 

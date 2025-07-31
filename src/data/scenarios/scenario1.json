@@ -62,6 +62,7 @@
       "turretDamaged": "No",
       "immobilized": "No",
       "fireLevel": 0,
+      "hull_down": false,
       "size": 4,
       "armor_values": {
         "front": 6,

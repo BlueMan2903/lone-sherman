@@ -206,6 +206,10 @@ function TurnActions({ onManeuver, onAttack, onStartTurnLogic, onCommanderDecisi
       return; // Do nothing if the die is expended
     }
 
+    // Always reset doubles options when a die is clicked
+    setShowDoublesManeuverOptions(false);
+    setShowDoublesAttackOptions(false);
+
     const action = currentActionType === 'maneuver' 
       ? getManeuverActionForRoll(roll) 
       : getAttackActionForRoll(roll);
@@ -262,8 +266,8 @@ function TurnActions({ onManeuver, onAttack, onStartTurnLogic, onCommanderDecisi
     else if (isDoublesActive) {
       setSelectedDiceForDoubles([]);
       setIsDoublesActive(false);
-      setSelectedDieIndex(null); // Clear any single selection too
-      setSelectedAction(null);
+      setSelectedDieIndex(index); // Clear any single selection too
+      setSelectedAction(action);
     }
   };
 
@@ -373,6 +377,9 @@ function TurnActions({ onManeuver, onAttack, onStartTurnLogic, onCommanderDecisi
         setShowDoublesManeuverOptions(true);
       } else if (currentActionType === 'attack') {
         setShowDoublesAttackOptions(true);
+      } else if (currentActionType === 'miscellaneous') {
+        // Since there are no misc actions, just expend the dice
+        expendCurrentDie();
       }
       return;
     }
@@ -518,7 +525,7 @@ function TurnActions({ onManeuver, onAttack, onStartTurnLogic, onCommanderDecisi
           )}
 
           {/* Doubles Button */}
-          {isDoublesActive && !showDoublesManeuverOptions && !showTurnButtons && (
+          {isDoublesActive && !showDoublesManeuverOptions && !showDoublesAttackOptions && !showTurnButtons && (
             <button className={`${styles.actionButton} ${styles.doublesButton}`} onClick={() => handleActionClick(null, true)}>
               DOUBLES
             </button>
@@ -553,6 +560,7 @@ function TurnActions({ onManeuver, onAttack, onStartTurnLogic, onCommanderDecisi
               </button>
             </div>
           )}
+
           {showTurnButtons && (
             <div className={styles.turnButtons}>
               <button className={`${styles.actionButton} ${styles.maneuverActionButton}`} onClick={() => handleTurnDirectionClick(-60)}>

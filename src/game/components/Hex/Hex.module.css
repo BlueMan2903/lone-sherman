@@ -70,3 +70,13 @@
   pointer-events: none; /* Allows clicks to pass through to the hex below */
   z-index: 15; /* Ensure it's above the hex base but below units */
 }
+
+.hullDownText {
+  position: absolute;
+  bottom: 0px;
+  font-size: 0.8em;
+  font-weight: bold;
+  color: #006400; /* Dark Green */
+  text-shadow: 1px 1px 2px black;
+  z-index: 20;
+}

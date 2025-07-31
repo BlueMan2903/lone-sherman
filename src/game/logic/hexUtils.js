@@ -113,13 +113,11 @@ function hex_round(hex) {
 }
 
 export function getHexesInLine(hexA, hexB) {
-  const N = getDistance(hexA, hexB); // Number of steps
+  const N = getDistance(hexA, hexB);
   const results = [];
-  // Add a small epsilon to avoid floating point issues at the end point
-  const epsilon = 1e-6;
   for (let i = 0; i <= N; i++) {
-    const hex = hex_round(hex_lerp(hexA, hexB, (1.0 / N * i) + epsilon * (i / N)));
-    results.push(hex);
+    const t = N === 0 ? 0.0 : i / N;
+    results.push(hex_round(hex_lerp(hexA, hexB, t)));
   }
   return results;
 }

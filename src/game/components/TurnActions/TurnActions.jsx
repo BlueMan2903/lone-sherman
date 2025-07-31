@@ -8,7 +8,7 @@ import DiceDisplay from '../DiceDisplay/DiceDisplay';
 
 import { getDistance } from '../../logic/hexUtils';
 
-function TurnActions({ onManeuver, onAttack, onStartTurnLogic, onCommanderDecision, shermanUnit, currentScenario, onMoveSherman, onReverseSherman, onTurnSherman, onUpdateUnit, onSetNotification, getHexesInLine, onFireMainGun, targetingMessage, selectedTargetUnitId, onRemoveGermanSmoke, onEndTurn, onFireLevelCheck }) {
+function TurnActions({ onManeuver, onAttack, onStartTurnLogic, onCommanderDecision, shermanUnit, currentScenario, onMoveSherman, onReverseSherman, onTurnSherman, onUpdateUnit, onSetNotification, getHexesInLine, onFireMainGun, targetingMessage, selectedTargetUnitId, onRemoveGermanSmoke, onFireLevelCheck, endPlayerTurn, turnNumber, onHullDown }) {
   // State to manage the current phase of the player's turn
   // 'initial' -> 'commander_decision' -> 'sherman_operations'
   const [currentPhase, setCurrentPhase] = useState('initial');
@@ -23,9 +23,20 @@ function TurnActions({ onManeuver, onAttack, onStartTurnLogic, onCommanderDecisi
   const [showTurnButtons, setShowTurnButtons] = useState(false);
   const [showDoublesManeuverOptions, setShowDoublesManeuverOptions] = useState(false);
   const [showDoublesAttackOptions, setShowDoublesAttackOptions] = useState(false);
+  const [showDoublesMiscOptions, setShowDoublesMiscOptions] = useState(false);
   const [currentActionType, setCurrentActionType] = useState(null); // 'maneuver' or 'attack'
   const [miscellaneousExpended, setMiscellaneousExpended] = useState(false);
   const [germanSmokeRemoved, setGermanSmokeRemoved] = useState(false);
+
+  useEffect(() => {
+    if (turnNumber > 1) {
+      setCurrentPhase('initial');
+      setManeuverExpended(false);
+      setAttackExpended(false);
+      setMiscellaneousExpended(false);
+      setGermanSmokeRemoved(false);
+    }
+  }, [turnNumber]);
 
   useEffect(() => {
     if (diceResults.length > 0 && diceResults.length === expendedDice.length) {
@@ -49,10 +60,10 @@ function TurnActions({ onManeuver, onAttack, onStartTurnLogic, onCommanderDecisi
       onRemoveGermanSmoke();
       setGermanSmokeRemoved(true);
       setTimeout(() => {
-        onFireLevelCheck();
-      }, 1000); // Short delay before calling Fire Level Check
+        endPlayerTurn();
+      }, 1000); // Short delay before calling endPlayerTurn
     }
-  }, [miscellaneousExpended, germanSmokeRemoved, onRemoveGermanSmoke, onFireLevelCheck]);
+  }, [miscellaneousExpended, germanSmokeRemoved, onRemoveGermanSmoke, endPlayerTurn]);
 
   
 
@@ -378,8 +389,7 @@ function TurnActions({ onManeuver, onAttack, onStartTurnLogic, onCommanderDecisi
       } else if (currentActionType === 'attack') {
         setShowDoublesAttackOptions(true);
       } else if (currentActionType === 'miscellaneous') {
-        // Since there are no misc actions, just expend the dice
-        expendCurrentDie();
+        setShowDoublesMiscOptions(true);
       }
       return;
     }
@@ -446,12 +456,6 @@ function TurnActions({ onManeuver, onAttack, onStartTurnLogic, onCommanderDecisi
     setShowDoublesManeuverOptions(false);
     setShowTurnButtons(false);
   }, [selectedDieIndex, selectedDiceForDoubles, isDoublesActive]);
-
-  const handleDestroyTarget = () => {
-    if (selectedTargetUnitId && onUpdateUnit) {
-      onUpdateUnit(selectedTargetUnitId, { destroyed: true });
-    }
-  };
 
   return (
     <div className={styles.actionButtonsContainer}>
@@ -561,6 +565,15 @@ function TurnActions({ onManeuver, onAttack, onStartTurnLogic, onCommanderDecisi
             </div>
           )}
 
+          {/* Doubles Misc Options */}
+          {isDoublesActive && showDoublesMiscOptions && (
+            <div className={styles.doublesMiscOptions}>
+              <button className={`${styles.actionButton} ${styles.miscellaneousActionButton}`} onClick={() => handleActionClick(onHullDown)}>
+                HULL DOWN
+              </button>
+            </div>
+          )}
+
           {showTurnButtons && (
             <div className={styles.turnButtons}>
               <button className={`${styles.actionButton} ${styles.maneuverActionButton}`} onClick={() => handleTurnDirectionClick(-60)}>
@@ -584,14 +597,6 @@ function TurnActions({ onManeuver, onAttack, onStartTurnLogic, onCommanderDecisi
               title={`Roll ${calculateMiscellaneousDice().totalDice}
               ${calculateMiscellaneousDice().reasons.join('\n')}`}>
               Miscellaneous
-            </button>
-          )}
-          {selectedTargetUnitId && (
-            <button
-              className={`${styles.actionButton} ${styles.destroyButton}`}
-              onClick={handleDestroyTarget}
-            >
-              DESTROY TARGET
             </button>
           )}
           {/* Add an "End Turn" button here later */}

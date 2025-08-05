@@ -12,6 +12,7 @@ const TANK_DAMAGED_SOUND_PATH = '../assets/sounds/tank-damaged.mp3';
 import { getNeighborHex, getHexesInLine, hasClearPath, getDistance, getFiringArcHexes, getAngleOfAttack } from './logic/hexUtils';
 import { calculateToHitNumber, roll2D6, roll1D6, calculateDamage } from './logic/combatUtils';
 import scenario1Data from '../data/scenarios/scenario1.json';
+import soundtrack from '../assets/sounds/soundtrack.mp3';
 import styles from './Game.module.css';
 
 // Helper function to get N unique random elements from an array
@@ -82,6 +83,7 @@ function Game() {
   useEffect(() => {
     const initialScenario = initializeScenarioUnits();
     setCurrentScenario(initialScenario);
+    playSound(soundtrack, 0.5, true); // Play soundtrack on loop
   }, [initializeScenarioUnits]);
 
   const handleStartTurnLogic = useCallback(() => {
@@ -153,8 +155,7 @@ function Game() {
       const isHit = diceRoll.total >= toHit;
 
       let hitMessage = `To-Hit: ${toHit} (Roll: ${diceRoll.total} [${diceRoll.rolls.join('+')}]) - ${isHit ? 'HIT!' : 'MISS!'}`;
-      hitMessage += `
-Breakdown: Dist(${breakdown.distance}), Size(${breakdown.size}), Build(${breakdown.building}), Smoke(${breakdown.smoke}), Hull(${breakdown.hullDown}), Arc(${breakdown.southernArc})`;
+      hitMessage += `\nBreakdown: Dist(${breakdown.distance}), Size(${breakdown.size}), Build(${breakdown.building}), Smoke(${breakdown.smoke}), Hull(${breakdown.hullDown}), Arc(${breakdown.southernArc})`;
       console.log(hitMessage);
 
       if (isHit) {

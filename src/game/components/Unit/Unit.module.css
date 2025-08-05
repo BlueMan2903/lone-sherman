@@ -112,6 +112,15 @@
   opacity: 0;
 }
 
+.smokeEffect.fadeOut {
+  animation: fadeOut 1s forwards; /* Fade out over 1 second */
+}
+
+@keyframes fadeOut {
+  from { opacity: 0.8; }
+  to { opacity: 0; display: none; }
+}
+
 .fadeIn {
   animation: fadeIn 0.8s ease-in forwards;
 }

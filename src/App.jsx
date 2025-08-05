@@ -1,14 +1,31 @@
 // src/App.jsx
-import React from 'react';
-import './App.css'; // Keep if you have other global App styles
-import Game from './game/Game'; // Import the Game component
-import IntroModal from './game/components/IntroModal/IntroModal'; // <--- NEW: Import IntroModal
+import React, { useState } from 'react';
+import './App.css';
+import Game from './game/Game';
+import IntroModal from './game/components/IntroModal/IntroModal';
+import WelcomeModal from './game/components/WelcomeModal/WelcomeModal'; // NEW: Import WelcomeModal
+import { playSound } from './game/logic/audioManager';
+import soundtrack from './assets/sounds/soundtrack.mp3';
 
 function App() {
+  const [showWelcomeModal, setShowWelcomeModal] = useState(true);
+  const [showIntroModal, setShowIntroModal] = useState(false);
+
+  const handlePlayClick = () => {
+    setShowWelcomeModal(false);
+    setShowIntroModal(true);
+    playSound(soundtrack, 0.1, true);
+  };
+
+  const handleGoClick = () => {
+    setShowIntroModal(false);
+  };
+
   return (
     <div className="App">
-      <Game /> {/* Render the main Game component here */}
-      <IntroModal /> {/* <--- NEW: Render the IntroModal here */}
+      <Game />
+      {showWelcomeModal && <WelcomeModal onPlayClick={handlePlayClick} />}
+      {showIntroModal && <IntroModal onGoClick={handleGoClick} />}
     </div>
   );
 }

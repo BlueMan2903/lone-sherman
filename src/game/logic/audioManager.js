@@ -3,6 +3,7 @@
 // Create a single AudioContext to be reused.
 let audioContext;
 const audioBufferCache = new Map();
+let currentSoundtrackSource = null; // NEW: To keep track of the playing soundtrack
 
 function getAudioContext() {
   if (!audioContext) {
@@ -29,7 +30,7 @@ async function loadSound(url) {
   return audioBuffer;
 }
 
-export async function playSound(url, volume = 1.0) { // Add volume parameter with a default of 1.0
+export async function playSound(url, volume = 1.0, loop = false) { // Add volume and loop parameters
   try {
     const context = getAudioContext();
     if (context.state === 'suspended') {
@@ -45,13 +46,27 @@ export async function playSound(url, volume = 1.0) { // Add volume parameter wit
     gainNode.connect(context.destination); // Connect GainNode to destination
 
     gainNode.gain.value = volume; // Set the volume
+    source.loop = loop; // Set loop property
+
+    // NEW: If this is the soundtrack and one is already playing, stop it
+    if (loop && currentSoundtrackSource) {
+      currentSoundtrackSource.stop();
+      currentSoundtrackSource.disconnect();
+    }
 
     source.start(0); // Play immediately
+
+    // NEW: If this is the soundtrack, store its reference
+    if (loop) {
+      currentSoundtrackSource = source;
+    }
+
   } catch (error) {
     console.error(`Error playing sound ${url}:`, error);
     // Fallback for browsers that might have issues with Web Audio API
     const audio = new Audio(url);
     audio.volume = volume; // Set volume on fallback too
+    audio.loop = loop; // Set loop property on fallback too
     audio.play();
   }
 }

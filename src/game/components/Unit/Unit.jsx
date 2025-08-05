@@ -21,6 +21,7 @@ function Unit({ unitData, pixelX, pixelY, hexHeight, onClick, isTargetingMode, i
   const [showHit, setShowHit] = useState(false);
   const [showSmoke, setShowSmoke] = useState(false);
   const [showDestroyedVisuals, setShowDestroyedVisuals] = useState(false); // NEW state
+  const [smokeAnimationClass, setSmokeAnimationClass] = useState(''); // NEW state
 
   useEffect(() => {
     if (destroyed) {
@@ -30,6 +31,7 @@ function Unit({ unitData, pixelX, pixelY, hexHeight, onClick, isTargetingMode, i
         setShowFire(false);
         setShowSmoke(false);
         setShowDestroyedVisuals(true); // NEW: Show destroyed visuals after delay
+        setSmokeAnimationClass(''); // Reset smoke animation class
         const explosionDuration = 1000;
         const timer = setTimeout(() => {
           setCurrentVfx(null);
@@ -43,8 +45,18 @@ function Unit({ unitData, pixelX, pixelY, hexHeight, onClick, isTargetingMode, i
     } else {
       setCurrentVfx(null);
       setShowFire(false);
-      setShowSmoke(damaged);
       setShowDestroyedVisuals(false); // NEW: Reset on not destroyed
+      if (damaged) {
+        setShowSmoke(true);
+        setSmokeAnimationClass(styles.fadeIn);
+      } else {
+        // If not damaged, and was smoking, fade out
+        if (showSmoke) {
+          setSmokeAnimationClass(styles.fadeOut);
+          const timer = setTimeout(() => setShowSmoke(false), 1000); // Match fadeOut duration
+          return () => clearTimeout(timer);
+        }
+      }
     }
   }, [destroyed, damaged]);
 

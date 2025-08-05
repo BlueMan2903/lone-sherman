@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import styles from './IntroModal.module.css';
 
-function IntroModal() {
+function IntroModal({ onGoClick }) {
   const [isVisible, setIsVisible] = useState(true); // State to control modal visibility
 
   // Optional: If you want to force it to show every time for testing,
@@ -17,6 +17,9 @@ function IntroModal() {
 
   const handleGoClick = () => {
     setIsVisible(false); // Hide the modal
+    if (onGoClick) {
+      onGoClick();
+    }
     // Optional: Set a flag in localStorage so it doesn't show again
     // localStorage.setItem('hasSeenIntro', 'true');
   };

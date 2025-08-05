@@ -20,6 +20,7 @@ function Unit({ unitData, pixelX, pixelY, hexHeight, onClick, isTargetingMode, i
   const [showFire, setShowFire] = useState(false);
   const [showHit, setShowHit] = useState(false);
   const [showSmoke, setShowSmoke] = useState(false);
+  const [showDestroyedVisuals, setShowDestroyedVisuals] = useState(false); // NEW state
 
   useEffect(() => {
     if (destroyed) {
@@ -28,6 +29,7 @@ function Unit({ unitData, pixelX, pixelY, hexHeight, onClick, isTargetingMode, i
         setCurrentVfx(`${tankExplosionGif}?${Date.now()}`);
         setShowFire(false);
         setShowSmoke(false);
+        setShowDestroyedVisuals(true); // NEW: Show destroyed visuals after delay
         const explosionDuration = 1000;
         const timer = setTimeout(() => {
           setCurrentVfx(null);
@@ -42,6 +44,7 @@ function Unit({ unitData, pixelX, pixelY, hexHeight, onClick, isTargetingMode, i
       setCurrentVfx(null);
       setShowFire(false);
       setShowSmoke(damaged);
+      setShowDestroyedVisuals(false); // NEW: Reset on not destroyed
     }
   }, [destroyed, damaged]);
 
@@ -88,7 +91,7 @@ function Unit({ unitData, pixelX, pixelY, hexHeight, onClick, isTargetingMode, i
 
   return (
     <div
-      className={`${styles.unitContainer} ${canBeTargeted ? styles.targeting : ''} ${destroyed ? styles.destroyed : ''} ${damaged && !destroyed ? styles.damaged : ''} ${unitData.hull_down ? styles.hullDown : ''}`}
+      className={`${styles.unitContainer} ${canBeTargeted ? styles.targeting : ''} ${showDestroyedVisuals ? styles.destroyed : ''} ${damaged && !destroyed ? styles.damaged : ''} ${unitData.hull_down ? styles.hullDown : ''}`}
       style={containerStyle}
       onClick={canBeTargeted ? onClick : undefined}
     >

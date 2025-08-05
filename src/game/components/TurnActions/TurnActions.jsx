@@ -248,11 +248,13 @@ function TurnActions({ onManeuver, onAttack, onStartTurnLogic, onCommanderDecisi
       setSelectedAction(action);
       setIsDoublesActive(false); // Ensure doubles is off
       setSelectedDiceForDoubles([]); // Ensure doubles array is empty
+      setShowTurnButtons(false); // NEW: Hide turn buttons on new selection
     }
     // Case 2: The currently selected single die is clicked again (deselect)
     else if (selectedDieIndex === index) {
       setSelectedDieIndex(null);
       setSelectedAction(null);
+      setShowTurnButtons(false); // NEW: Hide turn buttons on deselection
     }
     // Case 3: A different die is clicked when a single die is selected (potential double or new single)
     else if (selectedDieIndex !== null && selectedDieIndex !== index) {
@@ -268,6 +270,7 @@ function TurnActions({ onManeuver, onAttack, onStartTurnLogic, onCommanderDecisi
           setSelectedAction(action);
           setIsDoublesActive(false);
           setSelectedDiceForDoubles([]);
+          setShowTurnButtons(false); // NEW: Hide turn buttons if doubles not allowed
         } else if (currentActionType === 'attack' &&
                    shermanUnit.crew.gunner === 'kia' &&
                    shermanUnit.crew.loader === 'kia') {
@@ -276,11 +279,13 @@ function TurnActions({ onManeuver, onAttack, onStartTurnLogic, onCommanderDecisi
           setSelectedAction(action);
           setIsDoublesActive(false);
           setSelectedDiceForDoubles([]);
+          setShowTurnButtons(false); // NEW: Hide turn buttons if doubles not allowed
         } else {
           setSelectedDiceForDoubles([selectedDieIndex, index]);
           setIsDoublesActive(true);
           setSelectedDieIndex(null); // Clear single selection
           setSelectedAction(null); // Action will be chosen by doubles buttons
+          setShowTurnButtons(false); // NEW: Hide turn buttons when doubles are active
         }
       } else {
         // Not a double, new single selection
@@ -288,6 +293,7 @@ function TurnActions({ onManeuver, onAttack, onStartTurnLogic, onCommanderDecisi
         setSelectedAction(action);
         setIsDoublesActive(false); // Ensure doubles is off
         setSelectedDiceForDoubles([]); // Ensure doubles array is empty
+        setShowTurnButtons(false); // NEW: Hide turn buttons on new single selection
       }
     }
     // Case 4: A die is clicked when doubles are already active (deselect doubles)
@@ -296,6 +302,7 @@ function TurnActions({ onManeuver, onAttack, onStartTurnLogic, onCommanderDecisi
       setIsDoublesActive(false);
       setSelectedDieIndex(index); // Clear any single selection too
       setSelectedAction(action);
+      setShowTurnButtons(false); // NEW: Hide turn buttons on deselection of doubles
     }
   };
 

@@ -30,13 +30,30 @@ function TurnActions({ onManeuver, onAttack, onStartTurnLogic, onCommanderDecisi
 
   useEffect(() => {
     if (turnNumber > 1) {
-      setCurrentPhase('initial');
+      // Reset all relevant states for the new turn to start fresh
+      setCurrentPhase('commander_decision');
       setManeuverExpended(false);
       setAttackExpended(false);
       setMiscellaneousExpended(false);
       setGermanSmokeRemoved(false);
+      setDiceResults([]);
+      setExpendedDice([]);
+      setSelectedAction(null);
+      setSelectedDieIndex(null);
+      setSelectedDiceForDoubles([]);
+      setIsDoublesActive(false);
+      setShowTurnButtons(false);
+      setShowDoublesManeuverOptions(false);
+      setShowDoublesAttackOptions(false);
+      setShowDoublesMiscOptions(false);
+      setCurrentActionType(null);
+
+      // Also call the start turn logic from the parent to handle things like smoke clearing
+      if (onStartTurnLogic) {
+        onStartTurnLogic();
+      }
     }
-  }, [turnNumber]);
+  }, [turnNumber, onStartTurnLogic]);
 
   useEffect(() => {
     if (diceResults.length > 0 && diceResults.length === expendedDice.length) {

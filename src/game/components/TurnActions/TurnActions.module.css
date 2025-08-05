@@ -159,6 +159,21 @@
   background-color: #138496; /* Darker Teal */
 }
 
+.doublesMiscOptions {
+  display: flex;
+  gap: 10px;
+  justify-content: space-around;
+}
+
+.miscellaneousActionButton {
+  background-color: #17a2b8; /* Teal */
+  color: white;
+}
+
+.miscellaneousActionButton:hover {
+  background-color: #138496; /* Darker Teal */
+}
+
 .endPhaseButton {
   background-color: #6c757d; /* Grey */
   color: white;

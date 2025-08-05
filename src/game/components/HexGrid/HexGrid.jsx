@@ -1,24 +1,21 @@
 // src/game/components/HexGrid/HexGrid.jsx
 import React from 'react';
 import Hex from '../Hex/Hex';
-import Unit from '../Unit/Unit'; // Import the Unit component
+import Unit from '../Unit/Unit';
 import styles from './HexGrid.module.css';
 import { axialToPixel, HEX_WIDTH, HEX_HEIGHT } from '../../logic/hexUtils';
 
-function HexGrid({ hexes, units, onUnitClick, isTargetingMode, bouncingUnitId }) { // Added 'units' prop
+function HexGrid({ hexes, units, onUnitClick, isTargetingMode, bouncingUnitId, hitUnitId, smokingUnitId }) { // Added smokingUnitId
   let minX = Infinity, minY = Infinity;
   let maxX = -Infinity, maxY = -Infinity;
 
-  // Create a quick lookup map for hex data by its q,r coordinates
   const hexMapByCoords = new Map();
   hexes.forEach(hex => {
     hexMapByCoords.set(`${hex.q},${hex.r}`, hex);
   });
 
-
   const renderedHexes = hexes.map(hex => {
     const { x, y } = axialToPixel(hex.q, hex.r);
-    // Update min/max bounds based on the hex's full dimensions
     minX = Math.min(minX, x - HEX_WIDTH / 2);
     minY = Math.min(minY, y - HEX_HEIGHT / 2);
     maxX = Math.max(maxX, x + HEX_WIDTH / 2);
@@ -28,40 +25,30 @@ function HexGrid({ hexes, units, onUnitClick, isTargetingMode, bouncingUnitId })
 
   const width = maxX - minX;
   const height = maxY - minY;
-
-  // Calculate offsets to normalize the top-left corner of the content to (0,0)
   const offsetX = -minX;
   const offsetY = -minY;
 
   const gridStyle = {
     width: `${width}px`,
     height: `${height}px`,
-    // REMOVED: transform: `translate(${offsetX}px, ${offsetY}px)`,
-    // This transform was double-offsetting the grid as hexes/units already use offsetX/offsetY
   };
 
   return (
     <div className={styles.hexGridContainer} style={gridStyle}>
-      {/* Render Hexes */}
       {renderedHexes.map(hex => (
         <Hex
           key={hex.id}
           hexData={hex}
-          pixelX={hex.pixelX + offsetX} // Apply offset for correct positioning within the container
-          pixelY={hex.pixelY + offsetY} // Apply offset for correct positioning within the container
+          pixelX={hex.pixelX + offsetX}
+          pixelY={hex.pixelY + offsetY}
           isHullDown={units.some(unit => unit.currentHex.q === hex.q && unit.currentHex.r === hex.r && unit.hull_down)}
         />
       ))}
 
-      {/* Render Units */}
       {units && units.map(unit => {
         const unitHexCoords = unit.currentHex;
-        if (!unitHexCoords) return null; // Skip if no position
+        if (!unitHexCoords) return null;
 
-        // Find the hex's pixel coordinates
-        // We need to find the *original* calculated pixelX, pixelY for this hex *before* global offset
-        // This is a bit tricky because renderedHexes already applied the offset if we look it up there.
-        // It's better to recalculate or find the un-offseted hex.
         const targetHex = renderedHexes.find(h => h.q === unitHexCoords.q && h.r === unitHexCoords.r);
 
         if (targetHex) {
@@ -69,12 +56,14 @@ function HexGrid({ hexes, units, onUnitClick, isTargetingMode, bouncingUnitId })
             <Unit
               key={unit.id}
               unitData={unit}
-              pixelX={targetHex.pixelX + offsetX} // Use the hex's final screen position
-              pixelY={targetHex.pixelY + offsetY} // Use the hex's final screen position
-              hexHeight={HEX_HEIGHT} // Pass hex dimension for relative sizing
+              pixelX={targetHex.pixelX + offsetX}
+              pixelY={targetHex.pixelY + offsetY}
+              hexHeight={HEX_HEIGHT}
               onClick={() => onUnitClick(unit)}
               isTargetingMode={isTargetingMode}
-              isBouncing={bouncingUnitId === unit.id} // <--- NEW
+              isBouncing={bouncingUnitId === unit.id}
+              isHit={hitUnitId === unit.id} // Pass isHit prop
+              isSmoking={smokingUnitId === unit.id} // Pass isSmoking prop
             />
           );
         }

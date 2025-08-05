@@ -64,6 +64,25 @@
   opacity: 0.9;
 }
 
+.hitEffect {
+  position: absolute;
+  width: 60px;
+  height: 60px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-repeat: no-repeat;
+  background-size: contain;
+  z-index: 14; /* High z-index to be on top */
+  opacity: 0.9;
+  animation: hitEffectFadeOut 1s forwards;
+}
+
+@keyframes hitEffectFadeOut {
+  0% { opacity: 0.9; }
+  100% { opacity: 0; display: none; }
+}
+
 /* The keyframes to play the explosion */
 /* No keyframes needed for GIF */
 
@@ -80,11 +99,24 @@
   opacity: 0;
 }
 
+.smokeEffect {
+  position: absolute;
+  width: 50px;
+  height: 50px;
+  top: 40%; /* Adjust vertical position */
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-repeat: no-repeat;
+  background-size: contain;
+  z-index: 11; /* Below hit/explosion but above unit */
+  opacity: 0;
+}
+
 .fadeIn {
   animation: fadeIn 0.8s ease-in forwards;
 }
 
 @keyframes fadeIn {
   from { opacity: 0; }
-  to { opacity: 1; }
+  to { opacity: 0.8; } /* Fade to a semi-transparent smoke */
 }
